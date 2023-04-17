@@ -30,7 +30,8 @@ Contributions are welcome! To contribute, please follow these steps:
 5. Submit a pull request.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+Under the GNU Affero General Public License v3.0. See the LICENSE file for more information.
 
 ## Acknowledgments
 Thanks to the Prometheus team for providing such a great monitoring tool.
