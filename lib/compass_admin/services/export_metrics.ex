@@ -92,10 +92,10 @@ defmodule CompassAdmin.Services.ExportMetrics do
                        "used" => used
                      }
                    }} ->
-                    Metrics.CompassInstrumenter.observe(:token, limit, ["token-#{index}", :limit])
-                    Metrics.CompassInstrumenter.observe(:token, remaining, ["token-#{index}", :remaining])
-                    Metrics.CompassInstrumenter.observe(:token, used, ["token-#{index}", :used])
-                    Metrics.CompassInstrumenter.observe(:token, reset, ["token-#{index}", :reset])
+                    Metrics.CompassInstrumenter.observe(:target_token, limit, ["token-#{index}", :limit])
+                    Metrics.CompassInstrumenter.observe(:target_token, remaining, ["token-#{index}", :remaining])
+                    Metrics.CompassInstrumenter.observe(:target_token, used, ["token-#{index}", :used])
+                    Metrics.CompassInstrumenter.observe(:target_token, reset, ["token-#{index}", :reset])
                     {limit, remaining, used, reset}
 
                   _ ->
