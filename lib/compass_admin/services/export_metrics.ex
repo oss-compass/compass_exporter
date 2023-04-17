@@ -67,9 +67,11 @@ defmodule CompassAdmin.Services.ExportMetrics do
     Metrics.CompassInstrumenter.observe(:token_stats, length(@config[:github_tokens]), [:count])
 
     token_stats =
-      Enum.chunk_every(@config[:github_tokens], 4)
-      |> Enum.map(fn tokens ->
-        Enum.map(tokens, fn token ->
+      @config[:github_tokens]
+      |> Enum.with_index()
+      |> Enum.chunk_every(4)
+      |> Enum.map(fn tokens_with_index ->
+        Enum.map(tokens_with_index, fn {token, index} ->
           Task.async(fn ->
             case Finch.build(
                    :get,
@@ -90,10 +92,10 @@ defmodule CompassAdmin.Services.ExportMetrics do
                        "used" => used
                      }
                    }} ->
-                    Metrics.CompassInstrumenter.observe(:token, limit, [token, :limit])
-                    Metrics.CompassInstrumenter.observe(:token, remaining, [token, :remaining])
-                    Metrics.CompassInstrumenter.observe(:token, used, [token, :used])
-                    Metrics.CompassInstrumenter.observe(:token, reset, [token, :reset])
+                    Metrics.CompassInstrumenter.observe(:token, limit, ["token-#{index}", :limit])
+                    Metrics.CompassInstrumenter.observe(:token, remaining, ["token-#{index}", :remaining])
+                    Metrics.CompassInstrumenter.observe(:token, used, ["token-#{index}", :used])
+                    Metrics.CompassInstrumenter.observe(:token, reset, ["token-#{index}", :reset])
                     {limit, remaining, used, reset}
 
                   _ ->
