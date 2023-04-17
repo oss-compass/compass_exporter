@@ -7,7 +7,7 @@ This is a Prometheus exporter that provides token usage stats, Compass report st
 1. git clone this repository at first.
 
 ```
-$ git clone https://github.com/oss-compass/compass-exporter
+$ git clone https://github.com/oss-compass/compass_exporter
 ```
 
 2. to fetch and compile all dependencies.
@@ -17,7 +17,7 @@ $ mix deps.get
 
 3. run locally
 ```
-mix phx.server
+$ mix phx.server
 ```
 
 ## Contributing
