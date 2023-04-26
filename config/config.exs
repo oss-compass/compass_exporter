@@ -57,6 +57,10 @@ config :compass_admin, CompassAdmin.Scheduler,
     export_metrics: [
       schedule: "*/30 * * * *",
       task: {CompassAdmin.Services.ExportMetrics, :start, []},
+    ],
+    queue_schedule: [
+      schedule: {:extended, "*/30"},
+      task: {CompassAdmin.Services.QueueSchedule, :start, []},
     ]
   ]
 

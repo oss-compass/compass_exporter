@@ -37,6 +37,7 @@ defmodule CompassAdmin.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:myxql, "~> 0.6.0"},
+      {:amqp, "~> 3.2"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.0"},
@@ -75,7 +76,8 @@ defmodule CompassAdmin.MixProject do
         "tailwind default --minify",
         "esbuild default --minify",
         "phx.digest"
-      ]
+      ],
+      external_bins: ["cmd cd scoop/scoop; go build -o ../../priv/bin/scoop"]
     ]
   end
 end

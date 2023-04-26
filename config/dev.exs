@@ -15,6 +15,25 @@ config :compass_admin, CompassAdmin.Cluster,
   username: "admin",
   password: "admin"
 
+config :amqp,
+  connections: [
+    compass_conn: [url: "amqp://admin:admin@localhost:5672"],
+  ],
+  channels: [
+    compass_chan: [connection: :compass_conn]
+  ]
+
+config :compass_admin, CompassAdmin.Services.QueueSchedule,
+  worker_num: 16,
+  max_group: 1,
+  host: "localhost",
+  port: 5672,
+  username: "admin",
+  password: "admin",
+  queues: [
+    [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"]
+  ]
+
 config :compass_admin, CompassAdmin.Services.ExportMetrics,
   proxy: "http://127.0.0.1:1081",
   github_tokens: []
