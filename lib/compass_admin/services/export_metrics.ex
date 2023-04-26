@@ -122,6 +122,14 @@ defmodule CompassAdmin.Services.ExportMetrics do
     Metrics.CompassInstrumenter.observe(:token_stats, token_used / (token_sum + 1), [
       :used_percentage
     ])
+
+    # tasks queue status
+    {:ok, channel} = AMQP.Application.get_channel(:compass_chan)
+    Enum.each(@config[:all_queues], fn [name: name, desc: desc] ->
+      {:ok, queue} = AMQP.Queue.declare(channel, name, [durable: true])
+      message_count = queue.message_count
+      Metrics.CompassInstrumenter.observe(:task_stats, message_count, [desc])
+    end)
   end
 
   defp is_url?(str) do

@@ -15,14 +15,48 @@ config :compass_admin, CompassAdminWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :compass_admin, :redis,
+  host: "compass-common-2",
+  port: 6379
+
 config :compass_admin, CompassAdmin.Cluster,
   url: "http://localhost:9200",
   username: "username",
   password: "password"
 
+config :amqp,
+  connections: [
+    compass_conn: [url: "amqp://admin:admin@localhost:5672"],
+  ],
+  channels: [
+    compass_chan: [connection: :compass_conn]
+  ]
+
+config :compass_admin, CompassAdmin.Services.QueueSchedule,
+  worker_num: 16,
+  max_group: 4,
+  host: "localhost",
+  port: 5672,
+  username: "username",
+  password: "password",
+  queues: [
+    [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"]
+  ],
+
 config :compass_admin, CompassAdmin.Services.ExportMetrics,
   proxy: "http://127.0.0.1:10808",
-  github_tokens: []
+  github_tokens: [
+  ],
+  all_queues: [
+    [name: "analyze_queue_v1", desc: "Major working queue"],
+    [name: "analyze_queue_v1_temp", desc: "Minor working queue"],
+    [name: "analyze_queue_v1_temp_bak", desc: "Pendding queue"],
+    [name: "lab_queue_v1", desc: "Lab metric working queue"],
+    [name: "summary_queue_v1", desc: "Summary metric working queue"],
+    [name: "analyze_queue_v2", desc: "Community metric working queue"],
+    [name: "submit_task_v1", desc: "Pull Request sumbit queue"],
+    [name: "yaml_check_v1", desc: "Yaml file format check queue"],
+  ]
 
 # ## SSL Support
 #

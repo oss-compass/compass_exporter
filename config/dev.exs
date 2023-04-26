@@ -36,7 +36,18 @@ config :compass_admin, CompassAdmin.Services.QueueSchedule,
 
 config :compass_admin, CompassAdmin.Services.ExportMetrics,
   proxy: "http://127.0.0.1:1081",
-  github_tokens: []
+  github_tokens: [
+  ],
+  all_queues: [
+    [name: "analyze_queue_v1", desc: "Major working queue"],
+    [name: "analyze_queue_v1_temp", desc: "Minor working queue"],
+    [name: "analyze_queue_v1_temp_bak", desc: "Pendding queue"],
+    [name: "lab_queue_v1", desc: "Lab metric working queue"],
+    [name: "summary_queue_v1", desc: "Summary metric working queue"],
+    [name: "analyze_queue_v2", desc: "Community metric working queue"],
+    [name: "submit_task_v1", desc: "Pull Request sumbit queue"],
+    [name: "yaml_check_v1", desc: "Yaml file format check queue"],
+  ]
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
