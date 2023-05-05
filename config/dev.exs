@@ -38,6 +38,7 @@ config :compass_admin, CompassAdmin.Services.ExportMetrics,
   proxy: "http://127.0.0.1:1081",
   github_tokens: [
   ],
+  projects_information_path: "/home/ef/Documents/compass-projects-information",
   all_queues: [
     [name: "analyze_queue_v1", desc: "Major working queue"],
     [name: "analyze_queue_v1_temp", desc: "Minor working queue"],

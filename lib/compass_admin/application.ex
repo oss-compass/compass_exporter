@@ -28,10 +28,14 @@ defmodule CompassAdmin.Application do
     CompassAdmin.Plug.MetricsExporter.setup()
     Metrics.CompassInstrumenter.setup()
 
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: CompassAdmin.Supervisor]
-    Supervisor.start_link(children, opts)
+    init_state = Supervisor.start_link(children, opts)
+    # Custom jobs
+    Enum.map([:export_metrics, :weekly_metrics], &CompassAdmin.Scheduler.run_job/1)
+    init_state
   end
 
   # Tell Phoenix to update the endpoint configuration

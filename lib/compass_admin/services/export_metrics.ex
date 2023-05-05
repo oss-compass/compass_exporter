@@ -6,6 +6,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
   @config Application.get_env(:compass_admin, __MODULE__, %{})
 
   def start() do
+    IO.puts("exporting metrics ...")
     Enum.each([gitee: :raw, github: :raw, gitee: :enriched, github: :enriched], fn {origin, type} ->
       with {:ok, %{aggregations: %{"distinct" => %{value: value}}}} <-
              Snap.Search.search(
@@ -139,6 +140,71 @@ defmodule CompassAdmin.Services.ExportMetrics do
 
       _ ->
         false
+    end
+  end
+
+  def weekly() do
+    IO.puts("exporting changes ...")
+    git_commit_snapshot()
+    |> Enum.map(fn {origin, value} ->
+      {action, origin, level} =
+        case origin do
+          :total_inc -> {:created, :all, :all}
+          :total_dec -> {:deleted, :all, :all}
+          :gitee_inc -> {:created, :gitee, :repo}
+          :github_inc -> {:created, :github, :repo}
+          :gitee_dec -> {:deleted, :gitee, :repo}
+          :github_dec -> {:deleted, :github, :repo}
+          :community_inc -> {:created, :community, :community}
+          :community_dec -> {:deleted, :community, :community}
+        end
+      Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, :last_week])
+    end)
+  end
+
+  # src shell:
+  # git log --grep='^Update at' -p -1 | grep '^commit' | awk '{print $2, "all_repositories.csv"}' | xargs git show | grep '^[+|-]'
+  def git_commit_snapshot() do
+    cd_repo = "cd #{@config[:projects_information_path]}"
+    csv_file = "all_repositories.csv"
+    with {_fetch, 0} <- System.shell("#{cd_repo}; export HTTPS_PROXY=#{@config[:proxy]}; git pull;"),
+         {commit, 0} <- System.shell("#{cd_repo}; git log --grep='^Update at' -p -1 | grep '^commit'"),
+         {output, 0} <- System.shell("#{cd_repo}; git show #{String.split(commit, " ") |> List.last() |> String.trim_trailing()} #{csv_file} | grep '^[+|-]'") do
+
+      String.split(output, "\n")
+      |> Enum.reduce(
+        %{
+          total_inc: 0, total_dec: 0,
+          gitee_inc: 0, github_inc: 0,
+          gitee_dec: 0, github_dec: 0,
+          community_inc: 0, community_dec: 0
+        },
+      fn row, acc ->
+        case row do
+          "+++" <> _ -> acc
+          "---" <> _ -> acc
+          "+" <> label ->
+            case URI.parse(label) do
+              %{host: "github.com"} ->
+                %{acc| total_inc: acc[:total_inc] + 1, github_inc: acc[:github_inc] + 1}
+              %{host: "gitee.com"} ->
+                %{acc| total_inc: acc[:total_inc] + 1, gitee_inc: acc[:gitee_inc] + 1}
+              _ ->
+                %{acc| total_inc: acc[:total_inc] + 1, community_inc: acc[:community_inc] + 1}
+            end
+          "-" <> label ->
+            case URI.parse(label) do
+              %{host: "github.com"} ->
+                %{acc| total_dec: acc[:total_dec] + 1, github_dec: acc[:github_dec] + 1}
+              %{host: "gitee.com"} ->
+                %{acc| total_dec: acc[:total_dec] + 1, gitee_dec: acc[:gitee_dec] + 1}
+              _ ->
+                %{acc| total_dec: acc[:total_dec] + 1, community_dec: acc[:community_dec] + 1}
+            end
+          _ ->
+            acc
+        end
+      end)
     end
   end
 end
