@@ -146,7 +146,55 @@ defmodule CompassAdmin.Services.ExportMetrics do
   def weekly() do
     IO.puts("exporting changes ...")
     git_commit_snapshot()
-    |> Enum.map(fn {origin, value} ->
+    metadata_updated_snapshot()
+  end
+
+  # src shell:
+  # git log --grep='^Update at' -p -1 | grep '^commit' | awk '{print $2, "all_repositories.csv"}' | xargs git show | grep '^[+|-]'
+  def git_commit_snapshot() do
+    cd_repo = "cd #{@config[:projects_information_path]}"
+    csv_file = "all_repositories.csv"
+    snapshot =
+      with {_fetch, 0} <- System.shell("#{cd_repo}; export HTTPS_PROXY=#{@config[:proxy]}; git pull;"),
+           {commit, 0} <- System.shell("#{cd_repo}; git log --grep='^Update at' -p -1 | grep '^commit'"),
+           {output, 0} <- System.shell("#{cd_repo}; git show #{String.split(commit, " ") |> List.last() |> String.trim_trailing()} #{csv_file} | grep '^[+|-]'") do
+
+        String.split(output, "\n")
+        |> Enum.reduce(
+          %{
+            total_inc: 0, total_dec: 0,
+            gitee_inc: 0, github_inc: 0,
+            gitee_dec: 0, github_dec: 0,
+            community_inc: 0, community_dec: 0
+          },
+        fn row, acc ->
+          case row do
+            "+++" <> _ -> acc
+            "---" <> _ -> acc
+            "+" <> label ->
+              case URI.parse(label) do
+                %{host: "github.com"} ->
+                  %{acc| total_inc: acc[:total_inc] + 1, github_inc: acc[:github_inc] + 1}
+                %{host: "gitee.com"} ->
+                  %{acc| total_inc: acc[:total_inc] + 1, gitee_inc: acc[:gitee_inc] + 1}
+                _ ->
+                  %{acc| total_inc: acc[:total_inc] + 1, community_inc: acc[:community_inc] + 1}
+              end
+            "-" <> label ->
+              case URI.parse(label) do
+                %{host: "github.com"} ->
+                  %{acc| total_dec: acc[:total_dec] + 1, github_dec: acc[:github_dec] + 1}
+                %{host: "gitee.com"} ->
+                  %{acc| total_dec: acc[:total_dec] + 1, gitee_dec: acc[:gitee_dec] + 1}
+                _ ->
+                  %{acc| total_dec: acc[:total_dec] + 1, community_dec: acc[:community_dec] + 1}
+              end
+            _ ->
+              acc
+          end
+        end)
+      end
+    Enum.map(snapshot, fn {origin, value} ->
       {action, origin, level} =
         case origin do
           :total_inc -> {:created, :all, :all}
@@ -162,49 +210,49 @@ defmodule CompassAdmin.Services.ExportMetrics do
     end)
   end
 
-  # src shell:
-  # git log --grep='^Update at' -p -1 | grep '^commit' | awk '{print $2, "all_repositories.csv"}' | xargs git show | grep '^[+|-]'
-  def git_commit_snapshot() do
-    cd_repo = "cd #{@config[:projects_information_path]}"
-    csv_file = "all_repositories.csv"
-    with {_fetch, 0} <- System.shell("#{cd_repo}; export HTTPS_PROXY=#{@config[:proxy]}; git pull;"),
-         {commit, 0} <- System.shell("#{cd_repo}; git log --grep='^Update at' -p -1 | grep '^commit'"),
-         {output, 0} <- System.shell("#{cd_repo}; git show #{String.split(commit, " ") |> List.last() |> String.trim_trailing()} #{csv_file} | grep '^[+|-]'") do
+  def metadata_updated_snapshot() do
+    total =
+      Enum.map(
+        [{:repo, :gitee}, {:repo, :github}, {:community, :community}],
+        fn {level, origin} ->
+          with {:ok, %{aggregations: %{"distinct_labels" => %{value: value}}}} <- Snap.Search.search(
+                 CompassAdmin.Cluster, @report_index, metadata_updated_query(level, origin)
+               ) do
+            Metrics.CompassInstrumenter.observe(:report_changes, value, [:updated, origin, level, :last_week])
+            value
+          else
+            _ -> 0
+          end
+        end)
+        |> Enum.sum()
+    Metrics.CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, :last_week])
+  end
 
-      String.split(output, "\n")
-      |> Enum.reduce(
-        %{
-          total_inc: 0, total_dec: 0,
-          gitee_inc: 0, github_inc: 0,
-          gitee_dec: 0, github_dec: 0,
-          community_inc: 0, community_dec: 0
-        },
-      fn row, acc ->
-        case row do
-          "+++" <> _ -> acc
-          "---" <> _ -> acc
-          "+" <> label ->
-            case URI.parse(label) do
-              %{host: "github.com"} ->
-                %{acc| total_inc: acc[:total_inc] + 1, github_inc: acc[:github_inc] + 1}
-              %{host: "gitee.com"} ->
-                %{acc| total_inc: acc[:total_inc] + 1, gitee_inc: acc[:gitee_inc] + 1}
-              _ ->
-                %{acc| total_inc: acc[:total_inc] + 1, community_inc: acc[:community_inc] + 1}
-            end
-          "-" <> label ->
-            case URI.parse(label) do
-              %{host: "github.com"} ->
-                %{acc| total_dec: acc[:total_dec] + 1, github_dec: acc[:github_dec] + 1}
-              %{host: "gitee.com"} ->
-                %{acc| total_dec: acc[:total_dec] + 1, gitee_dec: acc[:gitee_dec] + 1}
-              _ ->
-                %{acc| total_dec: acc[:total_dec] + 1, community_dec: acc[:community_dec] + 1}
-            end
-          _ ->
-            acc
-        end
-      end)
-    end
+  def metadata_updated_query(level, origin) do
+    prefix =
+      case origin do
+        :gitee -> "https://gitee.com"
+        :github -> "https://github.com"
+        _ -> nil
+      end
+    range = %{range: %{metadata__enriched_on: %{gte: "now-7d", lt: "now"}}}
+    level = %{match: %{"level.keyword" => level}}
+    phrase = if prefix, do: %{match_phrase: %{label: prefix}}, else: nil
+
+    %{
+      query: %{
+        bool: %{
+          must: Enum.filter([range, level, phrase], &(&1))
+        }
+      },
+      size: 0,
+      aggs: %{
+        distinct_labels: %{
+          cardinality: %{
+            field: "label.keyword"
+          }
+        }
+      }
+    }
   end
 end
