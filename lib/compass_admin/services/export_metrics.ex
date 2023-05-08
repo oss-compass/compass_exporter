@@ -147,6 +147,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
     IO.puts("exporting changes ...")
     git_commit_snapshot()
     metadata_updated_snapshot()
+    rawdata_updated_snapshot()
   end
 
   # src shell:
@@ -210,6 +211,29 @@ defmodule CompassAdmin.Services.ExportMetrics do
     end)
   end
 
+  def rawdata_updated_snapshot() do
+    Enum.map(
+      [
+        {:commits, :gitee, "gitee-git_raw"},
+        {:commits, :github, "github-git_raw"},
+        {:issues, :gitee, "gitee-issues_raw"},
+        {:issues, :github, "github-issues_raw"},
+        {:pulls, :gitee, "gitee-pulls_raw"},
+        {:pulls, :github, "github-pulls_raw"},
+        {:issue_comments, :gitee, "gitee2-issues_enriched"},
+        {:issue_comments, :github, "github2-issues_enriched"},
+        {:pull_comments, :gitee, "gitee2-pulls_enriched"},
+        {:pull_comments, :github, "github2-pulls_enriched"}
+      ],
+      fn {type, origin, index} ->
+        with {:ok, %{"count" => count}} = CompassAdmin.Cluster.post("/#{index}/_count", rawdata_updated_query()) do
+          Metrics.CompassInstrumenter.observe(:metadata_changes, count, [origin, type, :last_week])
+        else
+          _ -> 0
+        end
+      end)
+  end
+
   def metadata_updated_snapshot() do
     total =
       Enum.map(
@@ -251,6 +275,25 @@ defmodule CompassAdmin.Services.ExportMetrics do
           cardinality: %{
             field: "label.keyword"
           }
+        }
+      }
+    }
+  end
+
+  def rawdata_updated_query do
+    %{
+      query: %{
+        bool: %{
+          filter: [
+            %{
+              range: %{
+                metadata__updated_on: %{
+                  gte: "now-7d",
+                  lte: "now"
+                }
+              }
+            }
+          ]
         }
       }
     }
