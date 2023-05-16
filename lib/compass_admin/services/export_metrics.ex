@@ -270,7 +270,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
           end
         end)
         |> Enum.sum()
-    Metrics.CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, :last_week])
+    Metrics.CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, panel])
   end
 
   def metadata_updated_query(level, origin, begin_date, end_date) do
