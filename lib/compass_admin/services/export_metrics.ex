@@ -144,23 +144,35 @@ defmodule CompassAdmin.Services.ExportMetrics do
   end
 
   def weekly() do
-    IO.puts("exporting changes ...")
-    git_commit_snapshot()
-    metadata_updated_snapshot()
-    rawdata_updated_snapshot()
+    IO.puts("exporting weekly changes ...")
+    now = Timex.now()
+    begin_date = now |> Timex.shift(days: -7) |> Timex.to_date |> Date.to_string
+    end_date = now |> Timex.to_date |> Date.to_string
+    git_commit_snapshot(begin_date, end_date, :last_week)
+    metadata_updated_snapshot("now-7d", "now", :last_week)
+    rawdata_updated_snapshot("now-7d", "now", :last_week)
+  end
+
+  def monthly() do
+    IO.puts("exporting monthly changes ...")
+    now = Timex.now()
+    begin_date = now |> Timex.shift(days: -30) |> Timex.to_date |> Date.to_string
+    end_date = now |> Timex.to_date |> Date.to_string
+    git_commit_snapshot(begin_date, end_date, :last_month)
+    metadata_updated_snapshot("now-30d", "now", :last_month)
+    rawdata_updated_snapshot("now-30d", "now", :last_month)
   end
 
   # src shell:
   # git log --grep='^Update at' -p -1 | grep '^commit' | awk '{print $2, "all_repositories.csv"}' | xargs git show | grep '^[+|-]'
-  def git_commit_snapshot() do
+  def git_commit_snapshot(begin_date, end_date, panel) do
     cd_repo = "cd #{@config[:projects_information_path]}"
     csv_file = "all_repositories.csv"
     snapshot =
       with {_fetch, 0} <- System.shell("#{cd_repo}; export HTTPS_PROXY=#{@config[:proxy]}; git pull;"),
-           {commit, 0} <- System.shell("#{cd_repo}; git log --grep='^Update at' -p -1 | grep '^commit'"),
-           {output, 0} <- System.shell("#{cd_repo}; git show #{String.split(commit, " ") |> List.last() |> String.trim_trailing()} #{csv_file} | grep '^[+|-]'") do
+           {commits, 0} <- System.shell("#{cd_repo}; git log --grep='^Update at' --since=#{begin_date} --until=#{end_date} | grep '^commit'") do
 
-        String.split(output, "\n")
+        String.split(commits, "\n")
         |> Enum.reduce(
           %{
             total_inc: 0, total_dec: 0,
@@ -168,30 +180,39 @@ defmodule CompassAdmin.Services.ExportMetrics do
             gitee_dec: 0, github_dec: 0,
             community_inc: 0, community_dec: 0
           },
-        fn row, acc ->
-          case row do
-            "+++" <> _ -> acc
-            "---" <> _ -> acc
-            "+" <> label ->
-              case URI.parse(label) do
-                %{host: "github.com"} ->
-                  %{acc| total_inc: acc[:total_inc] + 1, github_inc: acc[:github_inc] + 1}
-                %{host: "gitee.com"} ->
-                  %{acc| total_inc: acc[:total_inc] + 1, gitee_inc: acc[:gitee_inc] + 1}
+        fn commit, result ->
+          with {output, 0} <- System.shell("#{cd_repo}; git show #{String.split(commit, " ") |> List.last() |> String.trim_trailing()} #{csv_file} | grep '^[+|-]'") do
+            String.split(output, "\n")
+            |> Enum.reduce(
+              result,
+            fn row, acc ->
+              case row do
+                "+++" <> _ -> acc
+                "---" <> _ -> acc
+                "+" <> label ->
+                  case URI.parse(label) do
+                    %{host: "github.com"} ->
+                      %{acc| total_inc: acc[:total_inc] + 1, github_inc: acc[:github_inc] + 1}
+                    %{host: "gitee.com"} ->
+                      %{acc| total_inc: acc[:total_inc] + 1, gitee_inc: acc[:gitee_inc] + 1}
+                    _ ->
+                      %{acc| total_inc: acc[:total_inc] + 1, community_inc: acc[:community_inc] + 1}
+                  end
+                "-" <> label ->
+                  case URI.parse(label) do
+                    %{host: "github.com"} ->
+                      %{acc| total_dec: acc[:total_dec] + 1, github_dec: acc[:github_dec] + 1}
+                    %{host: "gitee.com"} ->
+                      %{acc| total_dec: acc[:total_dec] + 1, gitee_dec: acc[:gitee_dec] + 1}
+                    _ ->
+                      %{acc| total_dec: acc[:total_dec] + 1, community_dec: acc[:community_dec] + 1}
+                  end
                 _ ->
-                  %{acc| total_inc: acc[:total_inc] + 1, community_inc: acc[:community_inc] + 1}
+                  acc
               end
-            "-" <> label ->
-              case URI.parse(label) do
-                %{host: "github.com"} ->
-                  %{acc| total_dec: acc[:total_dec] + 1, github_dec: acc[:github_dec] + 1}
-                %{host: "gitee.com"} ->
-                  %{acc| total_dec: acc[:total_dec] + 1, gitee_dec: acc[:gitee_dec] + 1}
-                _ ->
-                  %{acc| total_dec: acc[:total_dec] + 1, community_dec: acc[:community_dec] + 1}
-              end
-            _ ->
-              acc
+            end)
+          else
+            _ -> result
           end
         end)
       end
@@ -207,11 +228,11 @@ defmodule CompassAdmin.Services.ExportMetrics do
           :community_inc -> {:created, :community, :community}
           :community_dec -> {:deleted, :community, :community}
         end
-      Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, :last_week])
+      Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, panel])
     end)
   end
 
-  def rawdata_updated_snapshot() do
+  def rawdata_updated_snapshot(begin_date, end_date, panel) do
     Enum.map(
       [
         {:commits, :gitee, "gitee-git_raw"},
@@ -226,23 +247,23 @@ defmodule CompassAdmin.Services.ExportMetrics do
         {:pull_comments, :github, "github2-pulls_enriched"}
       ],
       fn {type, origin, index} ->
-        with {:ok, %{"count" => count}} = CompassAdmin.Cluster.post("/#{index}/_count", rawdata_updated_query()) do
-          Metrics.CompassInstrumenter.observe(:metadata_changes, count, [origin, type, :last_week])
+        with {:ok, %{"count" => count}} = CompassAdmin.Cluster.post("/#{index}/_count", rawdata_updated_query(begin_date, end_date)) do
+          Metrics.CompassInstrumenter.observe(:metadata_changes, count, [origin, type, panel])
         else
           _ -> 0
         end
       end)
   end
 
-  def metadata_updated_snapshot() do
+  def metadata_updated_snapshot(begin_date, end_date, panel) do
     total =
       Enum.map(
         [{:repo, :gitee}, {:repo, :github}, {:community, :community}],
         fn {level, origin} ->
           with {:ok, %{aggregations: %{"distinct_labels" => %{value: value}}}} <- Snap.Search.search(
-                 CompassAdmin.Cluster, @report_index, metadata_updated_query(level, origin)
+                 CompassAdmin.Cluster, @report_index, metadata_updated_query(level, origin, begin_date, end_date)
                ) do
-            Metrics.CompassInstrumenter.observe(:report_changes, value, [:updated, origin, level, :last_week])
+            Metrics.CompassInstrumenter.observe(:report_changes, value, [:updated, origin, level, panel])
             value
           else
             _ -> 0
@@ -252,14 +273,14 @@ defmodule CompassAdmin.Services.ExportMetrics do
     Metrics.CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, :last_week])
   end
 
-  def metadata_updated_query(level, origin) do
+  def metadata_updated_query(level, origin, begin_date, end_date) do
     prefix =
       case origin do
         :gitee -> "https://gitee.com"
         :github -> "https://github.com"
         _ -> nil
       end
-    range = %{range: %{metadata__enriched_on: %{gte: "now-7d", lt: "now"}}}
+    range = %{range: %{metadata__enriched_on: %{gte: begin_date, lt: end_date}}}
     level = %{match: %{"level.keyword" => level}}
     phrase = if prefix, do: %{match_phrase: %{label: prefix}}, else: nil
 
@@ -280,7 +301,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
     }
   end
 
-  def rawdata_updated_query do
+  def rawdata_updated_query(begin_date, end_date) do
     %{
       query: %{
         bool: %{
@@ -288,8 +309,8 @@ defmodule CompassAdmin.Services.ExportMetrics do
             %{
               range: %{
                 metadata__updated_on: %{
-                  gte: "now-7d",
-                  lte: "now"
+                  gte: begin_date,
+                  lte: end_date
                 }
               }
             }
