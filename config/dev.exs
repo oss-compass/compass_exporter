@@ -48,6 +48,7 @@ config :compass_admin, CompassAdmin.Services.ExportMetrics,
     [name: "analyze_queue_v2", desc: "Community metric working queue"],
     [name: "submit_task_v1", desc: "Pull Request sumbit queue"],
     [name: "yaml_check_v1", desc: "Yaml file format check queue"],
+    [name: "subscriptions_update_v1", desc: "Subscriptions update queue"],
   ]
 
 # For development, we disable any cache and enable
