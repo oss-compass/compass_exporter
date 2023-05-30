@@ -28,6 +28,7 @@ config :compass_admin, CompassAdmin.Mailer, adapter: Swoosh.Adapters.Local
 
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
+config :swoosh, local: false
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -52,6 +53,16 @@ config :prometheus, :vm_system_info_collector_metrics, []
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :compass_admin, CompassAdmin.GlobalScheduler,
+  jobs: [
+    queue_schedule: [
+      schedule: {:extended, "*/30"},
+      task: {CompassAdmin.Services.QueueSchedule, :start, []},
+      run_strategy: Quantum.RunStrategy.Local,
+      overlap: false
+    ]
+  ]
+
 config :compass_admin, CompassAdmin.Scheduler,
   jobs: [
     export_metrics: [
@@ -72,12 +83,6 @@ config :compass_admin, CompassAdmin.Scheduler,
       run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
       overlap: false
     ],
-    queue_schedule: [
-      schedule: {:extended, "*/30"},
-      task: {CompassAdmin.Services.QueueSchedule, :start, []},
-      run_strategy: {Quantum.RunStrategy.Random, :cluster},
-      overlap: false
-    ]
   ]
 
 config :libcluster,

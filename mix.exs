@@ -45,6 +45,7 @@ defmodule CompassAdmin.MixProject do
       {:phoenix_live_view, "~> 0.18.0"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.7"},
+      {:highlander, "~> 0.2.1"},
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},
       {:quantum, "~> 3.0"},

@@ -27,6 +27,7 @@ defmodule CompassAdmin.Application do
       # Start a worker by calling: CompassAdmin.Worker.start_link(arg)
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
+      {Highlander, CompassAdmin.GlobalScheduler}
     ]
 
     CompassAdmin.Plug.MetricsExporter.setup()
