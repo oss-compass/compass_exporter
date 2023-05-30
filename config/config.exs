@@ -57,18 +57,33 @@ config :compass_admin, CompassAdmin.Scheduler,
     export_metrics: [
       schedule: "*/30 * * * *",
       task: {CompassAdmin.Services.ExportMetrics, :start, []},
+      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+      overlap: false
     ],
     weekly_metrics: [
       schedule: "0 12 * * *",
       task: {CompassAdmin.Services.ExportMetrics, :weekly, []},
+      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+      overlap: false
     ],
     monthly_metrics: [
       schedule: "0 12 * * 6",
       task: {CompassAdmin.Services.ExportMetrics, :monthly, []},
+      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+      overlap: false
     ],
     queue_schedule: [
       schedule: {:extended, "*/30"},
       task: {CompassAdmin.Services.QueueSchedule, :start, []},
+      run_strategy: {Quantum.RunStrategy.Random, :cluster},
+      overlap: false
+    ]
+  ]
+
+config :libcluster,
+  topologies: [
+    compass_admin: [
+      strategy: Cluster.Strategy.Gossip,
     ]
   ]
 

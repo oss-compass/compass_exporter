@@ -7,7 +7,11 @@ defmodule CompassAdmin.Application do
 
   @impl true
   def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies)
+
     children = [
+      # Start Cluster Supervisor
+      {Cluster.Supervisor, [topologies, [name: CompassAdmin.ClusterSupervisor]]},
       # Start the Ecto repository
       CompassAdmin.Repo,
       # Start the Elasticsearch cluster
