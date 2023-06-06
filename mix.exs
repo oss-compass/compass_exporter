@@ -40,6 +40,7 @@ defmodule CompassAdmin.MixProject do
       {:amqp, "~> 3.2"},
       {:timex, "~> 3.7"},
       {:libcluster, "~> 3.3"},
+      {:xmlrpc, "~> 1.4"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.0"},
@@ -59,7 +60,8 @@ defmodule CompassAdmin.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:petal_components, "~> 0.18.0"},
-      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+      {:decimal, "~> 2.0", override: true}
     ]
   end
 

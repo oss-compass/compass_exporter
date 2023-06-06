@@ -60,6 +60,12 @@ config :compass_admin, CompassAdmin.GlobalScheduler,
       task: {CompassAdmin.Services.QueueSchedule, :start, []},
       run_strategy: Quantum.RunStrategy.Local,
       overlap: false
+    ],
+    crono_check: [
+      schedule: "* * * * *",
+      task: {CompassAdmin.Services.CronoCheck, :start, []},
+      run_strategy: Quantum.RunStrategy.Local,
+      overlap: false
     ]
   ]
 
