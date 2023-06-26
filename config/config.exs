@@ -95,6 +95,9 @@ config :libcluster,
   topologies: [
     compass_admin: [
       strategy: Cluster.Strategy.Gossip,
+      config: [
+        secret: "compass-admin"
+      ]
     ]
   ]
 
