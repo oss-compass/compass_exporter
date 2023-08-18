@@ -9,40 +9,40 @@ defmodule CompassAdmin.Services.ExportMetrics do
     IO.puts("exporting metrics ...")
     Enum.each([gitee: :raw, github: :raw, gitee: :enriched, github: :enriched], fn {origin, type} ->
       with {:ok, %{aggregations: %{"distinct" => %{value: value}}}} <-
-             Snap.Search.search(
-               CompassAdmin.Cluster,
-               "#{origin}-repo_#{type}",
-               %{
-                 size: 0,
-                 aggs: %{distinct: %{cardinality: %{field: :origin}}}
-               }
-             ) do
+      Snap.Search.search(
+        CompassAdmin.Cluster,
+        "#{origin}-repo_#{type}",
+        %{
+          size: 0,
+          aggs: %{distinct: %{cardinality: %{field: :origin}}}
+        }
+      ) do
         Metrics.CompassInstrumenter.observe(:report_stats, value, [origin, type, :repo])
       end
     end)
 
     Enum.flat_map(0..(@num_partitions - 1), fn partition ->
       with {:ok, %{aggregations: %{"distinct_values" => %{buckets: buckets}}}} <-
-             Snap.Search.search(
-               CompassAdmin.Cluster,
-               @report_index,
-               %{
-                 size: 0,
-                 aggs: %{
-                   distinct_values: %{
-                     terms: %{
-                       field: "label.keyword",
-                       size: @batch_size,
-                       include: %{
-                         partition: partition,
-                         num_partitions: @num_partitions
-                       },
-                       order: %{_term: :asc}
-                     }
-                   }
-                 }
-               }
-             ) do
+      Snap.Search.search(
+        CompassAdmin.Cluster,
+        @report_index,
+        %{
+          size: 0,
+          aggs: %{
+            distinct_values: %{
+              terms: %{
+                field: "label.keyword",
+                size: @batch_size,
+                include: %{
+                  partition: partition,
+                  num_partitions: @num_partitions
+                },
+                order: %{_term: :asc}
+              }
+            }
+          }
+        }
+      ) do
         Enum.map(buckets, & &1["key"])
       end
     end)
@@ -57,10 +57,10 @@ defmodule CompassAdmin.Services.ExportMetrics do
       value = length(list)
 
       Metrics.CompassInstrumenter.observe(:report_stats, value, [
-        origin,
-        :finished,
-        if(origin == "community", do: origin, else: :repo)
-      ])
+            origin,
+            :finished,
+            if(origin == "community", do: origin, else: :repo)
+          ])
 
       {origin, value}
     end)
@@ -72,65 +72,65 @@ defmodule CompassAdmin.Services.ExportMetrics do
       |> Enum.with_index()
       |> Enum.chunk_every(4)
       |> Enum.map(fn tokens_with_index ->
-        Enum.map(tokens_with_index, fn {token, index} ->
-          Task.async(fn ->
-            case Finch.build(
-                   :get,
-                   "https://api.github.com/rate_limit",
-                   [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{token}"}],
-                   nil,
-                   proxy: @config[:proxy]
-                 )
-                 |> Finch.request(CompassFinch) do
-              {:ok, %{body: body}} ->
-                case Jason.decode(body) do
-                  {:ok,
-                   %{
-                     "rate" => %{
-                       "limit" => limit,
-                       "remaining" => remaining,
-                       "reset" => reset,
-                       "used" => used
-                     }
-                   }} ->
-                    Metrics.CompassInstrumenter.observe(:target_token, limit, ["token-#{index}", :limit])
-                    Metrics.CompassInstrumenter.observe(:target_token, remaining, ["token-#{index}", :remaining])
-                    Metrics.CompassInstrumenter.observe(:target_token, used, ["token-#{index}", :used])
-                    Metrics.CompassInstrumenter.observe(:target_token, reset, ["token-#{index}", :reset])
-                    {limit, remaining, used, reset}
+      Enum.map(tokens_with_index, fn {token, index} ->
+        Task.async(fn ->
+          case Finch.build(
+                :get,
+                "https://api.github.com/rate_limit",
+                [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{token}"}],
+                nil,
+                proxy: @config[:proxy]
+              )
+              |> Finch.request(CompassFinch) do
+            {:ok, %{body: body}} ->
+              case Jason.decode(body) do
+                {:ok,
+                 %{
+                   "rate" => %{
+                     "limit" => limit,
+                     "remaining" => remaining,
+                     "reset" => reset,
+                     "used" => used
+                   }
+                 }} ->
+                  Metrics.CompassInstrumenter.observe(:target_token, limit, ["token-#{index}", :limit])
+                  Metrics.CompassInstrumenter.observe(:target_token, remaining, ["token-#{index}", :remaining])
+                  Metrics.CompassInstrumenter.observe(:target_token, used, ["token-#{index}", :used])
+                  Metrics.CompassInstrumenter.observe(:target_token, reset, ["token-#{index}", :reset])
+                  {limit, remaining, used, reset}
 
-                  _ ->
-                    {0, 0, 0, 0}
-                end
+                _ ->
+                  {0, 0, 0, 0}
+              end
 
-              _ ->
-                {0, 0, 0, 0}
-            end
-          end)
+            _ ->
+              {0, 0, 0, 0}
+          end
         end)
-        |> Task.await_many(@max_timeout)
       end)
-
-    token_stats = List.flatten(token_stats)
-
-    token_sum = Enum.sum(Enum.map(token_stats, &elem(&1, 0)))
-    token_remaining = Enum.sum(Enum.map(token_stats, &elem(&1, 1)))
-    token_used = Enum.sum(Enum.map(token_stats, &elem(&1, 2)))
-    Metrics.CompassInstrumenter.observe(:token_stats, token_sum, [:sum])
-    Metrics.CompassInstrumenter.observe(:token_stats, token_remaining, [:remaining])
-    Metrics.CompassInstrumenter.observe(:token_stats, token_used, [:used])
-
-    Metrics.CompassInstrumenter.observe(:token_stats, token_used / (token_sum + 1), [
-      :used_percentage
-    ])
-
-    # tasks queue status
-    {:ok, channel} = AMQP.Application.get_channel(:compass_chan)
-    Enum.each(@config[:all_queues], fn [name: name, desc: desc] ->
-      {:ok, queue} = AMQP.Queue.declare(channel, name, [durable: true])
-      message_count = queue.message_count
-      Metrics.CompassInstrumenter.observe(:task_stats, message_count, [desc])
+      |> Task.await_many(@max_timeout)
     end)
+
+      token_stats = List.flatten(token_stats)
+
+      token_sum = Enum.sum(Enum.map(token_stats, &elem(&1, 0)))
+      token_remaining = Enum.sum(Enum.map(token_stats, &elem(&1, 1)))
+      token_used = Enum.sum(Enum.map(token_stats, &elem(&1, 2)))
+      Metrics.CompassInstrumenter.observe(:token_stats, token_sum, [:sum])
+      Metrics.CompassInstrumenter.observe(:token_stats, token_remaining, [:remaining])
+      Metrics.CompassInstrumenter.observe(:token_stats, token_used, [:used])
+
+      Metrics.CompassInstrumenter.observe(:token_stats, token_used / (token_sum + 1), [
+        :used_percentage
+      ])
+
+      # tasks queue status
+      {:ok, channel} = AMQP.Application.get_channel(:compass_chan)
+      Enum.each(@config[:all_queues], fn [name: name, desc: desc] ->
+        {:ok, queue} = AMQP.Queue.declare(channel, name, [durable: true])
+        message_count = queue.message_count
+        Metrics.CompassInstrumenter.observe(:task_stats, message_count, [desc])
+      end)
   end
 
   defp is_url?(str) do
@@ -216,20 +216,25 @@ defmodule CompassAdmin.Services.ExportMetrics do
           end
         end)
       end
-    Enum.map(snapshot, fn {origin, value} ->
-      {action, origin, level} =
-        case origin do
-          :total_inc -> {:created, :all, :all}
-          :total_dec -> {:deleted, :all, :all}
-          :gitee_inc -> {:created, :gitee, :repo}
-          :github_inc -> {:created, :github, :repo}
-          :gitee_dec -> {:deleted, :gitee, :repo}
-          :github_dec -> {:deleted, :github, :repo}
-          :community_inc -> {:created, :community, :community}
-          :community_dec -> {:deleted, :community, :community}
-        end
-      Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, panel])
-    end)
+    case snapshot do
+      {"", 1} ->
+        IO.puts("No Changes")
+      _ ->
+        Enum.map(snapshot, fn {origin, value} ->
+          {action, origin, level} =
+            case origin do
+              :total_inc -> {:created, :all, :all}
+              :total_dec -> {:deleted, :all, :all}
+              :gitee_inc -> {:created, :gitee, :repo}
+              :github_inc -> {:created, :github, :repo}
+              :gitee_dec -> {:deleted, :gitee, :repo}
+              :github_dec -> {:deleted, :github, :repo}
+              :community_inc -> {:created, :community, :community}
+              :community_dec -> {:deleted, :community, :community}
+            end
+          Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, panel])
+        end)
+    end
   end
 
   def rawdata_updated_snapshot(begin_date, end_date, panel) do

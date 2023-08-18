@@ -7,6 +7,13 @@
 # General application configuration
 import Config
 
+only_web = if System.get_env("ONLY_WEB") do
+  IO.inspect("building with only_web flag", label: "build")
+  true
+else
+  false
+end
+
 config :compass_admin,
   ecto_repos: [CompassAdmin.Repo]
 
@@ -54,7 +61,7 @@ config :prometheus, :vm_system_info_collector_metrics, []
 config :phoenix, :json_library, Jason
 
 config :compass_admin, CompassAdmin.GlobalScheduler,
-  jobs: [
+  jobs: if(only_web, do: [], else: [
     queue_schedule: [
       schedule: {:extended, "*/30"},
       task: {CompassAdmin.Services.QueueSchedule, :start, []},
@@ -67,10 +74,10 @@ config :compass_admin, CompassAdmin.GlobalScheduler,
       run_strategy: Quantum.RunStrategy.Local,
       overlap: false
     ]
-  ]
+  ])
 
 config :compass_admin, CompassAdmin.Scheduler,
-  jobs: [
+  jobs: if(only_web, do: [], else: [
     export_metrics: [
       schedule: "*/30 * * * *",
       task: {CompassAdmin.Services.ExportMetrics, :start, []},
@@ -89,14 +96,14 @@ config :compass_admin, CompassAdmin.Scheduler,
       run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
       overlap: false
     ],
-  ]
+  ])
 
 config :libcluster,
   topologies: [
     compass_admin: [
       strategy: Cluster.Strategy.Gossip,
       config: [
-        secret: "compass-admin"
+        secret: if(only_web, do: "compass-admin-web", else: "compass-admin")
       ]
     ]
   ]
