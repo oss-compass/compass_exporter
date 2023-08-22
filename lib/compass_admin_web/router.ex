@@ -1,13 +1,16 @@
 defmodule CompassAdminWeb.Router do
   use CompassAdminWeb, :router
+  import Plug.BasicAuth
+
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, {CompassAdminWeb.LayoutView, :root}
-    plug :protect_from_forgery
+    # plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :basic_auth, Application.get_env(:compass_admin, :basic_auth)
   end
 
   pipeline :api do
@@ -16,12 +19,7 @@ defmodule CompassAdminWeb.Router do
 
   scope "/", CompassAdminWeb do
     pipe_through :browser
-
-    get "/", PageController, :index
-    live "/live", PageLive, :index
-    live "/live/modal/:size", PageLive, :modal
-    live "/live/slide_over/:origin", PageLive, :slide_over
-    live "/live/pagination/:page", PageLive, :pagination
+    live "/admin", PageLive, :index
   end
 
   # Other scopes may use custom stacks.

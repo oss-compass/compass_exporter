@@ -29,6 +29,16 @@ defmodule CompassAdmin.Services.CronoCheck do
     |> IO.inspect(label: "[stop crono]")
   end
 
+  def list_methods() do
+    build_xml_rpc("system.listMethods", [])
+    |> call_rpc
+  end
+
+  def list_processes() do
+    build_xml_rpc("supervisor.getAllProcessInfo", [])
+    |> call_rpc
+  end
+
   def do_start_crono() do
     request = build_xml_rpc("supervisor.startProcess", [@config[:process_name]])
     with {:ok, resp} <- Finch.request(request, CompassFinch) do
@@ -63,6 +73,12 @@ defmodule CompassAdmin.Services.CronoCheck do
       [{"Content-Type", "text/xml"}, {"Authorization", "Basic #{@config[:basic_auth]}"}],
       request
     )
+  end
+
+  defp call_rpc(request) do
+    with {:ok, resp} <- Finch.request(request, CompassFinch) do
+      XMLRPC.decode(resp.body)
+    end
   end
 
   defp random_node() do

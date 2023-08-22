@@ -45,7 +45,7 @@ defmodule CompassAdminWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {CompassAdminWeb.LayoutView, "live.html"}
+        layout: {CompassAdminWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end

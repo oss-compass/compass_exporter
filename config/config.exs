@@ -24,6 +24,8 @@ config :compass_admin, CompassAdminWeb.Endpoint,
   pubsub_server: CompassAdmin.PubSub,
   live_view: [signing_salt: "Fd8SWPu3"]
 
+config :compass_admin, :basic_auth, username: "username", password: "password"
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
@@ -42,7 +44,7 @@ config :esbuild,
   version: "0.15.5",
   default: [
     args:
-      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/admin/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
@@ -118,7 +120,7 @@ config :tailwind,
     args: ~w(
          --config=tailwind.config.js
          --input=css/app.css
-         --output=../priv/static/assets/app.css
+         --output=../priv/static/admin/assets/app.css
        ),
     cd: Path.expand("../assets", __DIR__)
   ]

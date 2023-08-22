@@ -50,6 +50,7 @@ defmodule CompassAdmin.MixProject do
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},
       {:quantum, "~> 3.0"},
+      {:vapor, "~> 0.10.0"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:prometheus_ex, "~> 3.0"},
