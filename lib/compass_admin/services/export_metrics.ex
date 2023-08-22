@@ -217,8 +217,8 @@ defmodule CompassAdmin.Services.ExportMetrics do
         end)
       end
     case snapshot do
-      {"", 1} ->
-        IO.puts("No Changes")
+      {output, error_code} ->
+        IO.puts("No Changes, #{output}, error_code: #{error_code}")
       _ ->
         Enum.map(snapshot, fn {origin, value} ->
           {action, origin, level} =
