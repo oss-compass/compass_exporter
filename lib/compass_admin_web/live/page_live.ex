@@ -4,7 +4,6 @@ defmodule CompassAdminWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Process.send_after(self(), :update, 30000)
     {:ok, %{param: processes}} = CronoCheck.list_processes()
 
     {:ok,
@@ -88,7 +87,6 @@ defmodule CompassAdminWeb.PageLive do
   end
 
   def handle_info(:update, _, socket) do
-    Process.send_after(self(), :update, 30000)
     {:ok, %{param: processes}} = CronoCheck.list_processes()
     {:noreply, assign(socket, processes: processes)}
   end
