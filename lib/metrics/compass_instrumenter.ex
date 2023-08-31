@@ -9,6 +9,8 @@ defmodule Metrics.CompassInstrumenter do
     Gauge.declare([name: :report_changes, help: "Changes of Compass's reports.", labels: ["action", "origin", "level", "range"]])
     Gauge.declare([name: :metadata_changes, help: "Changes of Compass's raw data.", labels: ["origin", "type", "range"]])
     Gauge.declare([name: :task_stats, help: "Stats of all task queues.", labels: ["desc"]])
+    Gauge.declare([name: :user_stats, help: "Stats of all user.", labels: ["type"]])
+    Gauge.declare([name: :lab_model_stats, help: "Stats of all lab model.", labels: ["type"]])
   end
 
   def observe(name, value, labels) do

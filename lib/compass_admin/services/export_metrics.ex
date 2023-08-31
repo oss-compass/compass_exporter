@@ -5,6 +5,13 @@ defmodule CompassAdmin.Services.ExportMetrics do
   @report_index "compass_metric_model_activity"
   @config Application.get_env(:compass_admin, __MODULE__, %{})
 
+  alias CompassAdmin.Repo
+  alias CompassAdmin.User
+  alias CompassAdmin.LabModel
+
+  alias Metrics.CompassInstrumenter
+  import Ecto.Query
+
   def start() do
     IO.puts("exporting metrics ...")
     Enum.each([gitee: :raw, github: :raw, gitee: :enriched, github: :enriched], fn {origin, type} ->
@@ -17,7 +24,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
           aggs: %{distinct: %{cardinality: %{field: :origin}}}
         }
       ) do
-        Metrics.CompassInstrumenter.observe(:report_stats, value, [origin, type, :repo])
+        CompassInstrumenter.observe(:report_stats, value, [origin, type, :repo])
       end
     end)
 
@@ -56,7 +63,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
     |> Enum.map(fn {origin, list} ->
       value = length(list)
 
-      Metrics.CompassInstrumenter.observe(:report_stats, value, [
+      CompassInstrumenter.observe(:report_stats, value, [
             origin,
             :finished,
             if(origin == "community", do: origin, else: :repo)
@@ -65,7 +72,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
       {origin, value}
     end)
 
-    Metrics.CompassInstrumenter.observe(:token_stats, length(@config[:github_tokens]), [:count])
+    CompassInstrumenter.observe(:token_stats, length(@config[:github_tokens]), [:count])
 
     token_stats =
       @config[:github_tokens]
@@ -93,10 +100,10 @@ defmodule CompassAdmin.Services.ExportMetrics do
                      "used" => used
                    }
                  }} ->
-                  Metrics.CompassInstrumenter.observe(:target_token, limit, ["token-#{index}", :limit])
-                  Metrics.CompassInstrumenter.observe(:target_token, remaining, ["token-#{index}", :remaining])
-                  Metrics.CompassInstrumenter.observe(:target_token, used, ["token-#{index}", :used])
-                  Metrics.CompassInstrumenter.observe(:target_token, reset, ["token-#{index}", :reset])
+                  CompassInstrumenter.observe(:target_token, limit, ["token-#{index}", :limit])
+                  CompassInstrumenter.observe(:target_token, remaining, ["token-#{index}", :remaining])
+                  CompassInstrumenter.observe(:target_token, used, ["token-#{index}", :used])
+                  CompassInstrumenter.observe(:target_token, reset, ["token-#{index}", :reset])
                   {limit, remaining, used, reset}
 
                 _ ->
@@ -116,11 +123,11 @@ defmodule CompassAdmin.Services.ExportMetrics do
       token_sum = Enum.sum(Enum.map(token_stats, &elem(&1, 0)))
       token_remaining = Enum.sum(Enum.map(token_stats, &elem(&1, 1)))
       token_used = Enum.sum(Enum.map(token_stats, &elem(&1, 2)))
-      Metrics.CompassInstrumenter.observe(:token_stats, token_sum, [:sum])
-      Metrics.CompassInstrumenter.observe(:token_stats, token_remaining, [:remaining])
-      Metrics.CompassInstrumenter.observe(:token_stats, token_used, [:used])
+      CompassInstrumenter.observe(:token_stats, token_sum, [:sum])
+      CompassInstrumenter.observe(:token_stats, token_remaining, [:remaining])
+      CompassInstrumenter.observe(:token_stats, token_used, [:used])
 
-      Metrics.CompassInstrumenter.observe(:token_stats, token_used / (token_sum + 1), [
+      CompassInstrumenter.observe(:token_stats, token_used / (token_sum + 1), [
         :used_percentage
       ])
 
@@ -129,7 +136,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
       Enum.each(@config[:all_queues], fn [name: name, desc: desc] ->
         {:ok, queue} = AMQP.Queue.declare(channel, name, [durable: true])
         message_count = queue.message_count
-        Metrics.CompassInstrumenter.observe(:task_stats, message_count, [desc])
+        CompassInstrumenter.observe(:task_stats, message_count, [desc])
       end)
   end
 
@@ -151,6 +158,8 @@ defmodule CompassAdmin.Services.ExportMetrics do
     git_commit_snapshot(begin_date, end_date, :last_week)
     metadata_updated_snapshot("now-7d", "now", :last_week)
     rawdata_updated_snapshot("now-7d", "now", :last_week)
+    user_stat_snapshot()
+    lab_model_stat_snapshot()
   end
 
   def monthly() do
@@ -232,7 +241,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
               :community_inc -> {:created, :community, :community}
               :community_dec -> {:deleted, :community, :community}
             end
-          Metrics.CompassInstrumenter.observe(:report_changes, value, [action, origin, level, panel])
+          CompassInstrumenter.observe(:report_changes, value, [action, origin, level, panel])
         end)
     end
   end
@@ -253,7 +262,7 @@ defmodule CompassAdmin.Services.ExportMetrics do
       ],
       fn {type, origin, index} ->
         with {:ok, %{"count" => count}} = CompassAdmin.Cluster.post("/#{index}/_count", rawdata_updated_query(begin_date, end_date)) do
-          Metrics.CompassInstrumenter.observe(:metadata_changes, count, [origin, type, panel])
+          CompassInstrumenter.observe(:metadata_changes, count, [origin, type, panel])
         else
           _ -> 0
         end
@@ -268,14 +277,14 @@ defmodule CompassAdmin.Services.ExportMetrics do
           with {:ok, %{aggregations: %{"distinct_labels" => %{value: value}}}} <- Snap.Search.search(
                  CompassAdmin.Cluster, @report_index, metadata_updated_query(level, origin, begin_date, end_date)
                ) do
-            Metrics.CompassInstrumenter.observe(:report_changes, value, [:updated, origin, level, panel])
+            CompassInstrumenter.observe(:report_changes, value, [:updated, origin, level, panel])
             value
           else
             _ -> 0
           end
         end)
         |> Enum.sum()
-    Metrics.CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, panel])
+    CompassInstrumenter.observe(:report_changes, total, [:updated, :all, :all, panel])
   end
 
   def metadata_updated_query(level, origin, begin_date, end_date) do
@@ -323,5 +332,17 @@ defmodule CompassAdmin.Services.ExportMetrics do
         }
       }
     }
+  end
+
+  def user_stat_snapshot() do
+    user_count = Repo.one(from(u in User, select: count("*")))
+    CompassInstrumenter.observe(:user_stats, user_count, [:count])
+  end
+
+  def lab_model_stat_snapshot() do
+    lab_model_count = Repo.one(from(m in LabModel, select: count("*")))
+    CompassInstrumenter.observe(:lab_model_stats, lab_model_count, [:count])
+    private_lab_model_count = Repo.one(from(m in LabModel, select: count("*"), where: m.is_public == false))
+    CompassInstrumenter.observe(:lab_model_stats, private_lab_model_count, [:private_count])
   end
 end
