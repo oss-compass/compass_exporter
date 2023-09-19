@@ -40,7 +40,8 @@ config :compass_admin, CompassAdmin.Services.QueueSchedule,
   username: "username",
   password: "password",
   queues: [
-    [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"]
+    [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"],
+    [major_queue: "analyze_queue_v2", minior_queue: "analyze_queue_v2_temp", pending_queue: "analyze_queue_v2_temp_bak"]
   ]
 
 config :compass_admin, CompassAdmin.Services.CronoCheck,
@@ -60,6 +61,8 @@ config :compass_admin, CompassAdmin.Services.ExportMetrics,
     [name: "lab_queue_v1", desc: "Lab metric working queue"],
     [name: "summary_queue_v1", desc: "Summary metric working queue"],
     [name: "analyze_queue_v2", desc: "Community metric working queue"],
+    [name: "analyze_queue_v2_temp", desc: "Community Minor working queue"],
+    [name: "analyze_queue_v2_temp_bak", desc: "Community Pendding queue"],
     [name: "submit_task_v1", desc: "Pull Request sumbit queue"],
     [name: "yaml_check_v1", desc: "Yaml file format check queue"],
     [name: "subscriptions_update_v1", desc: "Subscriptions update queue"],
