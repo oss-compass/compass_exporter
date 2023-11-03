@@ -20,7 +20,7 @@ defmodule CompassAdminWeb.Endpoint do
     at: "/",
     from: :compass_admin,
     gzip: false,
-    only: ~w(admin assets fonts images favicon.ico robots.txt)
+    only: ~w(admin assets fonts images favicon.ico robots.txt sitemaps)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

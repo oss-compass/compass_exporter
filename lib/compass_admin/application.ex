@@ -39,7 +39,7 @@ defmodule CompassAdmin.Application do
     opts = [strategy: :one_for_one, name: CompassAdmin.Supervisor]
     init_state = Supervisor.start_link(children, opts)
     # Custom jobs
-    Enum.map([:export_metrics, :weekly_metrics, :monthly_metrics], &CompassAdmin.Scheduler.run_job/1)
+    Enum.map([:export_metrics, :weekly_metrics, :monthly_metrics, :sitemap_generate], &CompassAdmin.Scheduler.run_job/1)
     init_state
   end
 

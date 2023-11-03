@@ -92,6 +92,12 @@ config :compass_admin, CompassAdmin.Scheduler,
       run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
       overlap: false
     ],
+    sitemap_generate: [
+      schedule: "0 12 * * *",
+      task: {CompassAdmin.Services.SitemapGenerate, :start, []},
+      run_strategy: Quantum.RunStrategy.Local,
+      overlap: false
+    ],
     monthly_metrics: [
       schedule: "0 12 * * 6",
       task: {CompassAdmin.Services.ExportMetrics, :monthly, []},
