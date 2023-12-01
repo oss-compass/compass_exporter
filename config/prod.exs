@@ -33,8 +33,8 @@ config :amqp,
   ]
 
 config :compass_admin, CompassAdmin.Services.QueueSchedule,
-  worker_num: 16,
-  max_group: 4,
+  worker_num: 24,
+  max_group: 2,
   host: "localhost",
   port: 5672,
   username: "username",

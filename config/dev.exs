@@ -34,6 +34,8 @@ config :compass_admin, CompassAdmin.Services.QueueSchedule,
     [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"]
   ]
 
+config :compass_admin, :basic_auth, username: "oss-compass", password: "admin"
+
 config :compass_admin, CompassAdmin.Services.CronoCheck,
   process_name: "compass-web-crontab",
   supervisor_api: "http://localhost:19999/RPC2",
