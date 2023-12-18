@@ -30,7 +30,7 @@ defmodule CompassAdmin.Services.QueueSchedule do
         end
 
         if major_count < worker_num && minor_count > 0 do
-          args = build_args(minor_name, major_name, worker_num - major_count)
+          args = build_args(minor_name, major_name, Enum.min([worker_num - major_count, minor_count]))
           options = [stderr_to_stdout: true, into: IO.stream(:stdio, :line)]
           case System.cmd(scoop, args, options) do
             {output, 0} -> {:ok, output} |> IO.inspect(label: "Moving to #{major_name}")
@@ -39,7 +39,7 @@ defmodule CompassAdmin.Services.QueueSchedule do
         end
 
         if minor_count < minor_num && pending_count > 0 do
-          args = build_args(pending_name, minor_name, worker_num)
+          args = build_args(pending_name, minor_name, Enum.min([pending_count, worker_num]))
           options = [stderr_to_stdout: true, into: IO.stream(:stdio, :line)]
           case System.cmd(scoop, args, options) do
             {output, 0} -> {:ok, output} |> IO.inspect(label: "Moving to #{minor_name}")
