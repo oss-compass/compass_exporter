@@ -11,13 +11,13 @@ config :compass_admin, CompassAdmin.Repo,
   pool_size: 10
 
 config :compass_admin, CompassAdmin.Cluster,
-  url: "http://localhost:9200",
+  url: "http://10.7.0.4:9200",
   username: "admin",
   password: "admin"
 
 config :amqp,
   connections: [
-    compass_conn: [url: "amqp://admin:admin@localhost:5672"],
+    compass_conn: [url: "amqp://admin:admin@10.7.0.3:5672"],
   ],
   channels: [
     compass_chan: [connection: :compass_conn]
@@ -26,7 +26,7 @@ config :amqp,
 config :compass_admin, CompassAdmin.Services.QueueSchedule,
   worker_num: 16,
   max_group: 1,
-  host: "localhost",
+  host: "10.7.0.3",
   port: 5672,
   username: "admin",
   password: "admin",
