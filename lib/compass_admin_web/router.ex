@@ -22,6 +22,11 @@ defmodule CompassAdminWeb.Router do
     live "/admin", PageLive, :index
   end
 
+  scope "/debug", CompassAdminWeb do
+    pipe_through :api
+    match :*, "/webhook", DebugController, :webhook
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", CompassAdminWeb do
   #   pipe_through :api
