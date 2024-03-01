@@ -39,13 +39,14 @@ defmodule CompassAdminWeb.Router do
   # If your application does not have an admins-only section yet,
   # you can use Plug.BasicAuth to set up some basic authentication
   # as long as you are also using SSL (which you should anyway).
-  if Mix.env() in [:dev, :test] do
-    import Phoenix.LiveDashboard.Router
+  import Phoenix.LiveDashboard.Router
 
-    scope "/" do
-      pipe_through :browser
-      live_dashboard "/dashboard", metrics: CompassAdminWeb.Telemetry
-    end
+  scope "/admin" do
+    pipe_through :browser
+    live_dashboard "/dashboard",
+      metrics: CompassAdminWeb.Telemetry,
+      ecto_repos: [CompassAdmin.Repo],
+      ecto_mysql_extras_options: [long_running_queries: [threshold: 200]]
   end
 
   # Enables the Swoosh mailbox preview in development.

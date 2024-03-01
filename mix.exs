@@ -10,7 +10,12 @@ defmodule CompassAdmin.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: [
+        compass_admin: [
+          overwrite: true
+        ]
+      ]
     ]
   end
 
@@ -20,7 +25,7 @@ defmodule CompassAdmin.MixProject do
   def application do
     [
       mod: {CompassAdmin.Application, []},
-      extra_applications: [:logger, :runtime_tools, :prometheus_ex, :prometheus_plugs]
+      extra_applications: [:logger, :runtime_tools, :prometheus_ex, :prometheus_plugs, :os_mon]
     ]
   end
 
@@ -47,6 +52,7 @@ defmodule CompassAdmin.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.7"},
       {:highlander, "~> 0.2.1"},
+      {:ecto_mysql_extras, "~> 0.3"},
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},
       {:quantum, "~> 3.0"},
