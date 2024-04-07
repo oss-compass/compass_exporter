@@ -15,14 +15,13 @@ config :compass_admin, CompassAdminWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
-config :compass_admin, :redis,
-  host: "compass-common-2",
-  port: 6379
-
 config :compass_admin, CompassAdmin.Cluster,
   url: "http://localhost:9200",
   username: "username",
   password: "password"
+
+config :compass_admin, :redis_url,
+  "redis://10.7.0.3:6379/1"
 
 config :amqp,
   connections: [

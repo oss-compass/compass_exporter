@@ -19,6 +19,7 @@ defmodule CompassAdmin.User do
     field(:email_verification_sent_at, :utc_datetime)
     field(:name, :string)
     field(:language, :string)
+    field(:role_level, :integer)
   end
 
   @doc false
@@ -26,5 +27,9 @@ defmodule CompassAdmin.User do
     user
     |> cast(attrs, [:name])
     |> validate_required([:name])
+  end
+
+  def super_role() do
+    10
   end
 end

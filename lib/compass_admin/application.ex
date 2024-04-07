@@ -8,6 +8,7 @@ defmodule CompassAdmin.Application do
   @impl true
   def start(_type, _args) do
     topologies = Application.get_env(:libcluster, :topologies)
+    redis_url = Application.get_env(:compass_admin, :redis_url, "")
 
     children = [
       # Start Cluster Supervisor
@@ -25,6 +26,7 @@ defmodule CompassAdmin.Application do
       # Start the Endpoint (http/https)
       CompassAdminWeb.Endpoint,
       # Start a worker by calling: CompassAdmin.Worker.start_link(arg)
+      {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix]}},
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
       {Highlander, CompassAdmin.GlobalScheduler}

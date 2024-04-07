@@ -15,6 +15,9 @@ config :compass_admin, CompassAdmin.Cluster,
   username: "admin",
   password: "admin"
 
+config :compass_admin, :redis_url,
+  "redis://10.7.0.3:6379/1"
+
 config :amqp,
   connections: [
     compass_conn: [url: "amqp://admin:admin@10.7.0.3:5672"],
@@ -33,8 +36,6 @@ config :compass_admin, CompassAdmin.Services.QueueSchedule,
   queues: [
     [major_queue: "analyze_queue_v1", minior_queue: "analyze_queue_v1_temp", pending_queue: "analyze_queue_v1_temp_bak"]
   ]
-
-config :compass_admin, :basic_auth, username: "oss-compass", password: "admin"
 
 config :compass_admin, CompassAdmin.Services.CronoCheck,
   process_name: "compass-web-crontab",
