@@ -17,7 +17,7 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
   end
 
   def logo do
-    Routes.static_path(Endpoint, "/images/phoenix.png")
+    Routes.static_path(Endpoint, "/images/og.png")
   end
 
   def footer do
