@@ -1,3 +1,6 @@
 [submodule "scoop"]
 	path = scoop
 	url = https://github.com/EdmondFrank/scoop
+[submodule "backoffice"]
+	path = backoffice
+	url = https://github.com/EdmondFrank/backoffice

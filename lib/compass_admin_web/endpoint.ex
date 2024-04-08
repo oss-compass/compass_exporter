@@ -23,6 +23,12 @@ defmodule CompassAdminWeb.Endpoint do
     gzip: false,
     only: ~w(admin assets fonts images favicon.ico robots.txt sitemaps)
 
+  plug Plug.Static,
+    at: "/backoffice",
+    from: :backoffice,
+    gzip: false,
+    only: ~w(css js)
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

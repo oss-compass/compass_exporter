@@ -14,6 +14,8 @@ else
   false
 end
 
+config :backoffice, layout: CompassAdminWeb.Live.Backoffice.Layout
+
 config :compass_admin,
   ecto_repos: [CompassAdmin.Repo]
 

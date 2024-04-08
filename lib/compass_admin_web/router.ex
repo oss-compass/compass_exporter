@@ -6,7 +6,7 @@ defmodule CompassAdminWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {CompassAdminWeb.LayoutView, :root}
+    plug :put_root_layout, {Backoffice.LayoutView, :backoffice}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug CompassAdminWeb.Plugs.VerifyAdminPlug

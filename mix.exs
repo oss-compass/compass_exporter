@@ -70,6 +70,7 @@ defmodule CompassAdmin.MixProject do
       {:sitemapper, "~> 0.6"},
       {:plug_cowboy, "~> 2.5"},
       {:petal_components, "~> 0.18.0"},
+      {:backoffice, path: "backoffice"},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:decimal, "~> 2.0", override: true}
     ]
