@@ -14,6 +14,10 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
     [
       Routes.static_path(Endpoint, "/backoffice/js/app.js")
     ]
+ end
+
+  def title do
+    "OSS Compass Admin"
   end
 
   def logo do

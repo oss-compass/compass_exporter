@@ -3,9 +3,10 @@ defmodule CompassAdmin.Services.CronoCheck do
 
   def start() do
     alives =
-      [node() | Node.list()]
+      all_app_nodes()
       |> Enum.map(&check_crono/1)
-      |> Enum.sum
+      |> Enum.sum()
+
     cond do
       alives < 1 -> start_crono()
       alives > 1 -> stop_crono()
@@ -18,13 +19,13 @@ defmodule CompassAdmin.Services.CronoCheck do
   end
 
   def start_crono() do
-    random_node()
+    random_app_node()
     |> :rpc.call(__MODULE__, :do_start_crono, [])
     |> IO.inspect(label: "[start crono]")
   end
 
   def stop_crono() do
-    random_node()
+    random_app_node()
     |> :rpc.call(__MODULE__, :do_stop_crono, [])
     |> IO.inspect(label: "[stop crono]")
   end
@@ -35,12 +36,22 @@ defmodule CompassAdmin.Services.CronoCheck do
   end
 
   def list_processes() do
-    build_xml_rpc("supervisor.getAllProcessInfo", [])
-    |> call_rpc
+    Enum.reduce(all_nodes(), %{}, fn node, ret ->
+      Map.put(ret, to_string(node), :rpc.call(node, __MODULE__, :do_list_processes, []))
+    end)
+  end
+
+  def do_list_processes() do
+    with {:ok, %{param: processes}} <-
+           build_xml_rpc("supervisor.getAllProcessInfo", [])
+           |> call_rpc do
+      processes
+    end || []
   end
 
   def do_start_crono() do
     request = build_xml_rpc("supervisor.startProcess", [@config[:process_name]])
+
     with {:ok, resp} <- Finch.request(request, CompassFinch) do
       XMLRPC.decode(resp.body)
     end
@@ -48,6 +59,7 @@ defmodule CompassAdmin.Services.CronoCheck do
 
   def do_stop_crono() do
     request = build_xml_rpc("supervisor.stopProcess", [@config[:process_name]])
+
     with {:ok, resp} <- Finch.request(request, CompassFinch) do
       XMLRPC.decode(resp.body)
     end
@@ -55,6 +67,7 @@ defmodule CompassAdmin.Services.CronoCheck do
 
   def do_check_crono() do
     request = build_xml_rpc("supervisor.getProcessInfo", [@config[:process_name]])
+
     with {:ok, resp} <- Finch.request(request, CompassFinch),
          {:ok, %{param: %{"statename" => "RUNNING"}}} <- XMLRPC.decode(resp.body) do
       1
@@ -63,13 +76,14 @@ defmodule CompassAdmin.Services.CronoCheck do
     end
   end
 
-  defp build_xml_rpc(method, params) do
+  defp build_xml_rpc(method, params, api_url \\ @config[:supervisor_api]) do
     request =
       %XMLRPC.MethodCall{method_name: method, params: params}
       |> XMLRPC.encode!()
+
     Finch.build(
       :post,
-      @config[:supervisor_api],
+      api_url,
       [{"Content-Type", "text/xml"}, {"Authorization", "Basic #{@config[:basic_auth]}"}],
       request
     )
@@ -81,8 +95,19 @@ defmodule CompassAdmin.Services.CronoCheck do
     end
   end
 
-  defp random_node() do
-    [node() | Node.list()]
+  defp random_app_node() do
+    all_app_nodes()
     |> Enum.random()
+  end
+
+  defp all_app_nodes() do
+    Enum.filter(all_nodes(), fn node ->
+      node_name = to_string(node)
+      String.contains?(node_name, "app-front") || String.contains?(node_name, "grimoirelab")
+    end)
+  end
+
+  defp all_nodes() do
+    [node() | Node.list()]
   end
 end

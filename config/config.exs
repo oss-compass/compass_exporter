@@ -7,12 +7,13 @@
 # General application configuration
 import Config
 
-only_web = if System.get_env("ONLY_WEB") do
-  IO.inspect("building with only_web flag", label: "build")
-  true
-else
-  false
-end
+only_web =
+  if System.get_env("ONLY_WEB") do
+    IO.inspect("building with only_web flag", label: "build")
+    true
+  else
+    false
+  end
 
 config :backoffice, layout: CompassAdminWeb.Live.Backoffice.Layout
 
@@ -27,6 +28,11 @@ config :compass_admin, CompassAdminWeb.Endpoint,
   live_view: [signing_salt: "Fd8SWPu3"]
 
 config :compass_admin, :basic_auth, username: "username", password: "password"
+
+config :compass_admin, :hostnames,
+  app1: "app-front-1",
+  app2: "app-front-2",
+  apm: "compass-apm"
 
 # Configures the mailer
 #
@@ -65,48 +71,56 @@ config :prometheus, :vm_system_info_collector_metrics, []
 config :phoenix, :json_library, Jason
 
 config :compass_admin, CompassAdmin.GlobalScheduler,
-  jobs: if(only_web, do: [], else: [
-    queue_schedule: [
-      schedule: {:extended, "*/30"},
-      task: {CompassAdmin.Services.QueueSchedule, :start, []},
-      run_strategy: Quantum.RunStrategy.Local,
-      overlap: false
-    ],
-    crono_check: [
-      schedule: "* * * * *",
-      task: {CompassAdmin.Services.CronoCheck, :start, []},
-      run_strategy: Quantum.RunStrategy.Local,
-      overlap: false
-    ]
-  ])
+  jobs:
+    if(only_web,
+      do: [],
+      else: [
+        queue_schedule: [
+          schedule: {:extended, "*/30"},
+          task: {CompassAdmin.Services.QueueSchedule, :start, []},
+          run_strategy: Quantum.RunStrategy.Local,
+          overlap: false
+        ],
+        crono_check: [
+          schedule: "* * * * *",
+          task: {CompassAdmin.Services.CronoCheck, :start, []},
+          run_strategy: Quantum.RunStrategy.Local,
+          overlap: false
+        ]
+      ]
+    )
 
 config :compass_admin, CompassAdmin.Scheduler,
-  jobs: if(only_web, do: [], else: [
-    export_metrics: [
-      schedule: "*/30 * * * *",
-      task: {CompassAdmin.Services.ExportMetrics, :start, []},
-      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
-      overlap: false
-    ],
-    weekly_metrics: [
-      schedule: "0 12 * * *",
-      task: {CompassAdmin.Services.ExportMetrics, :weekly, []},
-      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
-      overlap: false
-    ],
-    sitemap_generate: [
-      schedule: "0 12 * * *",
-      task: {CompassAdmin.Services.SitemapGenerate, :start, []},
-      run_strategy: Quantum.RunStrategy.Local,
-      overlap: false
-    ],
-    monthly_metrics: [
-      schedule: "0 12 * * 6",
-      task: {CompassAdmin.Services.ExportMetrics, :monthly, []},
-      run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
-      overlap: false
-    ],
-  ])
+  jobs:
+    if(only_web,
+      do: [],
+      else: [
+        export_metrics: [
+          schedule: "*/30 * * * *",
+          task: {CompassAdmin.Services.ExportMetrics, :start, []},
+          run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+          overlap: false
+        ],
+        weekly_metrics: [
+          schedule: "0 12 * * *",
+          task: {CompassAdmin.Services.ExportMetrics, :weekly, []},
+          run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+          overlap: false
+        ],
+        sitemap_generate: [
+          schedule: "0 12 * * *",
+          task: {CompassAdmin.Services.SitemapGenerate, :start, []},
+          run_strategy: Quantum.RunStrategy.Local,
+          overlap: false
+        ],
+        monthly_metrics: [
+          schedule: "0 12 * * 6",
+          task: {CompassAdmin.Services.ExportMetrics, :monthly, []},
+          run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
+          overlap: false
+        ]
+      ]
+    )
 
 config :libcluster,
   topologies: [

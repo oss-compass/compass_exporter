@@ -4,11 +4,11 @@ defmodule CompassAdminWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, %{param: processes}} = CronoCheck.list_processes()
+    processes_map = CronoCheck.list_processes()
 
     {:ok,
      assign(socket,
-       processes: processes,
+       processes: processes_map,
        modal: false,
        slide_over: false,
        pagination_page: 1
@@ -30,36 +30,33 @@ defmodule CompassAdminWeb.PageLive do
       <.container max_width="xl" class="mt-10">
         <.table>
           <.tr>
+            <.th>Node</.th>
             <.th>Service Name</.th>
-            <.th>Group</.th>
             <.th>Descrption</.th>
             <.th>Status</.th>
-            <.th></.th>
           </.tr>
-
-          <%= for {group, sub_processes} <- Enum.group_by(@processes, &(&1["group"])) do %>
+          <%= for {node, processes} <- @processes do %>
             <.tr>
               <.td class="pt-2 pb-0 pl-0">
-                <.badge color="primary" label={group} />
+                <.badge color="primary" label={node} />
               </.td>
             </.tr>
-            <%= for process <- sub_processes do %>
-              <.tr class={process["group"]}>
-                <.td>
+          <%= for {_group, sub_processes} <- Enum.group_by(processes, &(&1["group"])) do %>
+          <%= for process <- sub_processes do %>
+          <.tr class={process["group"]}>
+              <.td class="whitespace-nowrap"><%= node %></.td>
+              <.td>
                   <%= if process["group"] == process["name"],
                     do: process["name"],
                     else: process["group"] <> ":" <> process["name"] %>
-                </.td>
-                <.td><%= process["group"] %></.td>
-                <.td class="whitespace-nowrap"><%= process["description"] %></.td>
-                <.td>
+              </.td>
+              <.td class="whitespace-nowrap"><%= process["description"] %></.td>
+              <.td>
                   <.badge color="success" label={process["statename"]} />
-                </.td>
-                <.td>
-                  <.a to="/admin" label="Comming soon" class="text-primary-600 dark:text-primary-400" />
-                </.td>
-              </.tr>
-            <% end %>
+              </.td>
+          </.tr>
+          <% end %>
+          <% end %>
           <% end %>
         </.table>
       </.container>
@@ -68,7 +65,7 @@ defmodule CompassAdminWeb.PageLive do
   end
 
   def handle_info(:update, _, socket) do
-    {:ok, %{param: processes}} = CronoCheck.list_processes()
-    {:noreply, assign(socket, processes: processes)}
+    processes_map = CronoCheck.list_processes()
+    {:noreply, assign(socket, processes: processes_map)}
   end
 end
