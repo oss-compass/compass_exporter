@@ -26,41 +26,37 @@ defmodule CompassAdminWeb.PageLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="h-screen overflow-auto dark:bg-gray-900">
-      <.container max_width="xl" class="mt-10">
-        <.table>
-          <.tr>
-            <.th>Node</.th>
-            <.th>Service Name</.th>
-            <.th>Descrption</.th>
-            <.th>Status</.th>
-          </.tr>
-          <%= for {node, processes} <- @processes do %>
-            <.tr>
-              <.td class="pt-2 pb-0 pl-0">
-                <.badge color="primary" label={node} />
-              </.td>
-            </.tr>
-          <%= for {_group, sub_processes} <- Enum.group_by(processes, &(&1["group"])) do %>
+    <.table>
+      <.tr>
+        <.th>Node</.th>
+        <.th>Service Name</.th>
+        <.th>Descrption</.th>
+        <.th>Status</.th>
+      </.tr>
+      <%= for {node, processes} <- @processes do %>
+        <.tr>
+          <.td class="pt-2 pb-0 pl-0">
+            <.badge color="primary" label={node} />
+          </.td>
+        </.tr>
+        <%= for {_group, sub_processes} <- Enum.group_by(processes, &(&1["group"])) do %>
           <%= for process <- sub_processes do %>
-          <.tr class={process["group"]}>
+            <.tr class={process["group"]}>
               <.td class="whitespace-nowrap"><%= node %></.td>
               <.td>
-                  <%= if process["group"] == process["name"],
-                    do: process["name"],
-                    else: process["group"] <> ":" <> process["name"] %>
+                <%= if process["group"] == process["name"],
+                  do: process["name"],
+                  else: process["group"] <> ":" <> process["name"] %>
               </.td>
               <.td class="whitespace-nowrap"><%= process["description"] %></.td>
               <.td>
-                  <.badge color="success" label={process["statename"]} />
+                <.badge color="success" label={process["statename"]} />
               </.td>
-          </.tr>
+            </.tr>
           <% end %>
-          <% end %>
-          <% end %>
-        </.table>
-      </.container>
-    </div>
+        <% end %>
+      <% end %>
+    </.table>
     """
   end
 

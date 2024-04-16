@@ -40,6 +40,7 @@ defmodule CompassAdmin.MixProject do
     [
       {:phoenix, "~> 1.6.6"},
       {:phoenix_ecto, "~> 4.4"},
+      {:exile, "~> 0.9.1"},
       {:ecto_sql, "~> 3.6"},
       {:myxql, "~> 0.6.0"},
       {:amqp, "~> 3.2"},

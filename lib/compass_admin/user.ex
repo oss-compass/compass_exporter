@@ -1,6 +1,12 @@
 defmodule CompassAdmin.User do
   use Ecto.Schema
+
+  import Ecto.Query
   import Ecto.Changeset
+
+  alias CompassAdmin.Repo
+  alias CompassAdmin.User
+  alias CompassAdmin.LoginBind
 
   schema "users" do
     field(:email, :string)
@@ -20,6 +26,16 @@ defmodule CompassAdmin.User do
     field(:name, :string)
     field(:language, :string)
     field(:role_level, :integer)
+    has_many :login_binds, LoginBind
+  end
+
+  def find(id, opts \\ []) do
+    if id != nil do
+      preloads = Keyword.get(opts, :preloads, [])
+
+      Repo.one(from(u in User, where: u.id == ^id))
+      |> Repo.preload(preloads)
+    end
   end
 
   @doc false
@@ -29,7 +45,9 @@ defmodule CompassAdmin.User do
     |> validate_required([:name])
   end
 
-  def super_role() do
-    10
-  end
+  def normal_role, do: 1
+
+  def frontend_dev_role, do: 5
+
+  def super_role, do: 10
 end

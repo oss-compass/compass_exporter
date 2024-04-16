@@ -16,9 +16,10 @@ defmodule CompassAdminWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", CompassAdminWeb do
+  scope "/admin", CompassAdminWeb do
     pipe_through :browser
-    live "/admin", PageLive, :index
+    live "/", PageLive, :index
+    live "/deployments", DeploymentsLive, :index
   end
 
   scope "/debug", CompassAdminWeb do

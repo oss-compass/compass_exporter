@@ -29,19 +29,24 @@ defmodule CompassAdmin.Application do
       {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix]}},
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
-      {Highlander, CompassAdmin.GlobalScheduler}
+      {Highlander, CompassAdmin.GlobalScheduler},
+      # Deployment agents
+      {CompassAdmin.Agents.FrontendAgent, []}
     ]
 
     CompassAdmin.Plug.MetricsExporter.setup()
     Metrics.CompassInstrumenter.setup()
-
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: CompassAdmin.Supervisor]
     init_state = Supervisor.start_link(children, opts)
     # Custom jobs
-    Enum.map([:export_metrics, :weekly_metrics, :monthly_metrics, :sitemap_generate], &CompassAdmin.Scheduler.run_job/1)
+    Enum.map(
+      [:export_metrics, :weekly_metrics, :monthly_metrics, :sitemap_generate],
+      &CompassAdmin.Scheduler.run_job/1
+    )
+
     init_state
   end
 
