@@ -34,7 +34,7 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
                   Made with love by
                   <a class="hover:text-gray-500" href="https://github.com/edmondfrank">@edmondfrank</a>
               </p>
-              <a href="https://github.com/oss-compass/compass-exporter" class="hover:text-gray-500 text-xs mt-2 font-medium text-gray-500 group-hover:text-gray-700">
+              <a href="https://github.com/oss-compass/compass-admin" class="hover:text-gray-500 text-xs mt-2 font-medium text-gray-500 group-hover:text-gray-700">
                   View source
               </a>
           </div>

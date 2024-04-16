@@ -1,13 +1,13 @@
-# Prometheus Exporter for Compass
+# Compass Admin Platform
 
-This is a Prometheus exporter that provides token usage stats, Compass report stats, and other information for Compass (maybe it would become Compass Admin platform in the future).
+Compass Admin platform: include a Prometheus exporter that provides token usage stats, Compass report stats, and other information.
 
 ## Build
 
 1. git clone this repository at first.
 
 ```
-$ git clone https://github.com/oss-compass/compass-exporter
+$ git clone https://github.com/oss-compass/compass-admin
 ```
 
 2. to fetch and compile all dependencies.
@@ -17,8 +17,19 @@ $ mix deps.get
 
 3. run locally
 ```
-$ mix phx.server
+$ ONLY_WEB=1 MIX_ENV=dev iex --sname app-front-apm -S mix phx.server
 ```
+
+4. deploy
+```
+MIX_ENV=prod mix assets.deploy
+MIX_ENV=prod mix release
+mix deploy
+```
+
+## Preview
+
+![demo](docs/images/demo.png)
 
 ## Contributing
 Contributions are welcome! To contribute, please follow these steps:
