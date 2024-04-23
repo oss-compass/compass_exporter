@@ -51,7 +51,7 @@ defmodule CompassAdminWeb.DockerServicesLive do
             <.td><%= process["Names"] %></.td>
             <.td><%= "Created at #{process["CreatedAt"]}; #{process["Status"]}" %></.td>
             <.td>
-              <.badge color={state_color(process["State"])} label={process["State"]} />
+              <.badge color={state_color(process["State"])} label={String.upcase(process["State"])} />
             </.td>
           </.tr>
         <% end %>
