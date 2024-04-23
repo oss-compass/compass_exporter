@@ -45,6 +45,7 @@ defmodule CompassAdmin.MixProject do
       {:myxql, "~> 0.6.0"},
       {:amqp, "~> 3.2"},
       {:redix, "~> 1.1"},
+      {:redlock, "~> 1.0"},
       {:ex_marshal, "0.0.13"},
       {:timex, "~> 3.7"},
       {:libcluster, "~> 3.3"},

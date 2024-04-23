@@ -9,6 +9,13 @@ defmodule CompassAdmin.Application do
   def start(_type, _args) do
     topologies = Application.get_env(:libcluster, :topologies)
     redis_url = Application.get_env(:compass_admin, :redis_url, "")
+    %{host: redis_host, port: redis_port, userinfo: userinfo} = URI.parse(redis_url)
+
+    auth =
+      case userinfo do
+        ":" <> auth -> auth
+        _ -> userinfo
+      end
 
     children = [
       # Start Cluster Supervisor
@@ -25,8 +32,21 @@ defmodule CompassAdmin.Application do
       {Phoenix.PubSub, name: CompassAdmin.PubSub},
       # Start the Endpoint (http/https)
       CompassAdminWeb.Endpoint,
-      # Start a worker by calling: CompassAdmin.Worker.start_link(arg)
+      # Start Redix
       {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix]}},
+      {Redlock,
+       [
+         pool_size: 2,
+         drift_factor: 0.01,
+         max_retry: 3,
+         retry_interval_base: 300,
+         retry_interval_max: 3_000,
+         reconnection_interval_base: 500,
+         reconnection_interval_max: 5_000,
+         servers: [
+           [host: redis_host, port: redis_port, auth: auth]
+         ]
+       ]},
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
       {Highlander, CompassAdmin.GlobalScheduler},

@@ -34,6 +34,14 @@ config :compass_admin, :hostnames,
   app2: "app-front-2",
   apm: "compass-apm"
 
+config :compass_admin, CompassAdmin.Agents.FrontendAgent,
+  input: [""],
+  execute: "pyinfra prod-nodes.py prod-frontend-deploy.py"
+
+config :compass_admin, CompassAdmin.Services.Docker,
+  input: [""],
+  ps: ["docker", "ps", "--format", "\"{{json . }}\""]
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
@@ -97,13 +105,13 @@ config :compass_admin, CompassAdmin.Scheduler,
       else: [
         export_metrics: [
           schedule: "*/30 * * * *",
-          task: {CompassAdmin.Services.ExportMetrics, :start, []},
+          task: {CompassAdmin.Services.ExportMetrics, :with_lock, [:start]},
           run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
           overlap: false
         ],
         weekly_metrics: [
           schedule: "0 12 * * *",
-          task: {CompassAdmin.Services.ExportMetrics, :weekly, []},
+          task: {CompassAdmin.Services.ExportMetrics, :with_lock, [:weekly]},
           run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
           overlap: false
         ],
@@ -115,7 +123,7 @@ config :compass_admin, CompassAdmin.Scheduler,
         ],
         monthly_metrics: [
           schedule: "0 12 * * 6",
-          task: {CompassAdmin.Services.ExportMetrics, :monthly, []},
+          task: {CompassAdmin.Services.ExportMetrics, :with_lock, [:monthly]},
           run_strategy: {Quantum.RunStrategy.All, [:"compass_admin@app-front-1"]},
           overlap: false
         ]

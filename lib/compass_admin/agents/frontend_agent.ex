@@ -120,7 +120,7 @@ defmodule CompassAdmin.Agents.FrontendAgent do
   end
 
   defp do_deployment() do
-    [input: input, execute: execute] = Application.fetch_env!(:compass_admin, :frontend_deploy)
+    [input: input, execute: execute] = Application.fetch_env!(:compass_admin, __MODULE__)
 
     Exile.stream(["bash", "-l", "-c", execute], input: input, stderr: :consume)
     |> Stream.each(fn stream ->

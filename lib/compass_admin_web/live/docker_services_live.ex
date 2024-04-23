@@ -48,7 +48,7 @@ defmodule CompassAdminWeb.DockerServicesLive do
             <.td class="whitespace-nowrap"><%= node %></.td>
             <.td class="whitespace-nowrap"><%= process["ID"] %></.td>
             <.td><%= process["Image"] %></.td>
-            <.td class="whitespace-nowrap"><%= process["Names"] %></.td>
+            <.td><%= process["Names"] %></.td>
             <.td><%= "Created at #{process["CreatedAt"]}; #{process["Status"]}" %></.td>
             <.td>
               <.badge color={state_color(process["State"])} label={process["State"]} />

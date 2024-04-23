@@ -1,9 +1,11 @@
 defmodule CompassAdmin.Services.ExportMetrics do
-  @num_partitions 20
+  @num_partitions 40
   @batch_size 10000
   @max_timeout 15_000
+  @lock_exp_sec 30
   @report_index "compass_metric_model_activity"
   @config Application.get_env(:compass_admin, __MODULE__, %{})
+  require Logger
 
   alias CompassAdmin.Repo
   alias CompassAdmin.User
@@ -11,6 +13,22 @@ defmodule CompassAdmin.Services.ExportMetrics do
 
   alias Metrics.CompassInstrumenter
   import Ecto.Query
+
+  def with_lock(func_sym) do
+    key = to_string(func_sym)
+    case Redlock.lock(key, @lock_exp_sec) do
+      {:ok, mutex} ->
+        try do
+          :erlang.apply(__MODULE__, func_sym, [])
+        after
+          Redlock.unlock(key, mutex)
+        end
+
+      :error ->
+        Logger.error "failed to lock resource. maybe redis connection got trouble."
+        {:error, :system_error}
+    end
+  end
 
   def start() do
     IO.puts("exporting metrics ...")
