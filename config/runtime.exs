@@ -46,6 +46,12 @@ if config_env() == :prod do
   config :compass_admin, CompassAdminWeb.Endpoint,
     server: true,
     url: [host: host, port: 443],
+    check_origin: [
+      "https://compass.gitee.com",
+      "https://oss-compass.org",
+      "//compass.gitee.com",
+      "//oss-compass.org"
+    ],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
