@@ -9,12 +9,18 @@ defmodule CompassAdmin.Application do
   def start(_type, _args) do
     topologies = Application.get_env(:libcluster, :topologies)
     redis_url = Application.get_env(:compass_admin, :redis_url, "")
-    %{host: redis_host, port: redis_port, userinfo: userinfo} = URI.parse(redis_url)
+    %{host: redis_host, port: redis_port, userinfo: userinfo, path: path} = URI.parse(redis_url)
 
     auth =
       case userinfo do
         ":" <> auth -> auth
         _ -> userinfo
+      end
+
+    database =
+      case path do
+        "/" <> database -> Integer.parse(database) |> elem(0)
+        _ -> 0
       end
 
     children = [
@@ -44,13 +50,14 @@ defmodule CompassAdmin.Application do
          reconnection_interval_base: 500,
          reconnection_interval_max: 5_000,
          servers: [
-           [host: redis_host, port: redis_port, auth: auth]
+           [host: redis_host, port: redis_port, auth: auth, database: database]
          ]
        ]},
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
       {Highlander, CompassAdmin.GlobalScheduler},
       # Deployment agents
+      {CompassAdmin.Agents.BackendAgent, []},
       {CompassAdmin.Agents.FrontendAgent, []}
     ]
 

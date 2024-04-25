@@ -281,8 +281,6 @@ defmodule CompassAdmin.Services.ExportMetrics do
       fn {type, origin, index} ->
         with {:ok, %{"count" => count}} = CompassAdmin.Cluster.post("/#{index}/_count", rawdata_updated_query(begin_date, end_date)) do
           CompassInstrumenter.observe(:metadata_changes, count, [origin, type, panel])
-        else
-          _ -> 0
         end
       end)
   end

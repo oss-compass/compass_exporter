@@ -1,4 +1,4 @@
-defmodule CompassAdminWeb.DeploymentsLive do
+defmodule CompassAdminWeb.FrontendDeploymentLive do
   use CompassAdminWeb, :live_view
 
   alias CompassAdmin.User

@@ -20,7 +20,8 @@ defmodule CompassAdminWeb.Router do
     pipe_through :browser
     live "/", PageLive, :index
     live "/dockers", DockerServicesLive, :index
-    live "/deployments", DeploymentsLive, :index
+    live "/deployments/backend", BackendDeploymentLive, :index
+    live "/deployments/frontend", FrontendDeploymentLive, :index
   end
 
   scope "/debug", CompassAdminWeb do

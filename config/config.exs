@@ -38,6 +38,10 @@ config :compass_admin, CompassAdmin.Agents.FrontendAgent,
   input: [""],
   execute: "pyinfra prod-nodes.py prod-frontend-deploy.py"
 
+config :compass_admin, CompassAdmin.Agents.BackendAgent,
+  input: [""],
+  execute: "pyinfra prod-nodes.py prod-backend-deploy.py"
+
 config :compass_admin, CompassAdmin.Services.Docker,
   input: [""],
   ps: ["docker", "ps", "--format", "\"{{json . }}\""]

@@ -49,5 +49,9 @@ defmodule CompassAdmin.User do
 
   def frontend_dev_role, do: 5
 
+  def model_dev_role, do: 6
+
+  def backend_dev_role, do: 7
+
   def super_role, do: 10
 end
