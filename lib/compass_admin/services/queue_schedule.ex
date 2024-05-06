@@ -5,7 +5,7 @@ defmodule CompassAdmin.Services.QueueSchedule do
     queues = @config[:queues] || []
     worker_num = @config[:worker_num] || 16
     minor_num = @config[:minor_num] || 2000
-    max_group = @config[:max_group] || 4
+    max_group = @config[:max_group] || 8
     timeout = @config[:timeout] || 180
 
     {:ok, channel} = AMQP.Application.get_channel(:compass_chan)

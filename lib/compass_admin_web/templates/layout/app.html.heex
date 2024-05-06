@@ -1,5 +1,15 @@
 <main>
-  <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-  <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+  <%= if live_flash(@flash, :info) != nil do %>
+    <.alert with_icon class="alert alert-info" role="alert" label={get_flash(@conn, :info)} />
+  <% end %>
+  <%= if live_flash(@flash, :error) != nil do %>
+    <.alert
+      with_icon
+      class="alert alert-danger"
+      color="danger"
+      role="alert"
+      label={get_flash(@conn, :error)}
+    />
+  <% end %>
   <%= @inner_content %>
 </main>
