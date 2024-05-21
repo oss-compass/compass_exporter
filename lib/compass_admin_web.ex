@@ -94,7 +94,6 @@ defmodule CompassAdminWeb do
 
       # Import global components
       import CompassAdminWeb.Components.{
-        ColorSchemeSwitch,
         DeploymentPage
       }
 

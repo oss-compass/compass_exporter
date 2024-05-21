@@ -6,15 +6,13 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
 
   def stylesheets do
     [
-      Routes.static_path(Endpoint, "/admin/assets/app.css"),
-      Routes.static_path(Endpoint, "/backoffice/css/app.css")
+      Routes.static_path(Endpoint, "/admin/assets/app.css")
     ]
   end
 
   def scripts do
     [
-      Routes.static_path(Endpoint, "/admin/assets/app.js"),
-      Routes.static_path(Endpoint, "/backoffice/js/app.js")
+      Routes.static_path(Endpoint, "/admin/assets/app.js")
     ]
   end
 
