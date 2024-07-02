@@ -86,8 +86,7 @@ defmodule CompassAdmin.Agents.BackendAgent do
               {:update_deploy_state, :processing, trigger_id, {:ok, "processing"}}
             )
 
-            do_deployment()
-            GenServer.cast(__MODULE__, {:update_deploy_state, :ok, trigger_id, {:ok, :success}})
+            do_deployment(trigger_id)
           end)
 
           new_state = %{
@@ -119,7 +118,7 @@ defmodule CompassAdmin.Agents.BackendAgent do
     {:noreply, state}
   end
 
-  defp do_deployment() do
+  defp do_deployment(trigger_id) do
     [input: input, execute: execute] = Application.fetch_env!(:compass_admin, __MODULE__)
 
     Exile.stream(["bash", "-l", "-c", execute], input: input, stderr: :consume)
@@ -127,7 +126,14 @@ defmodule CompassAdmin.Agents.BackendAgent do
       case stream do
         {:stdout, data} -> log(data)
         {:stderr, msg} -> log(msg)
-        {:exit, {:status, code}} -> log("exit with status: #{code}")
+        {:exit, {:status, code}} ->
+          msg = "exit with status: #{code}"
+          log(msg)
+          if code != 0 do
+            GenServer.cast(__MODULE__, {:update_deploy_state, :ok, trigger_id, {:error, msg}})
+          else
+            GenServer.cast(__MODULE__, {:update_deploy_state, :ok, trigger_id, {:ok, :success}})
+          end
       end
     end)
     |> Stream.run()

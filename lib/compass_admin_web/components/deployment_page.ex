@@ -11,7 +11,7 @@ defmodule CompassAdminWeb.Components.DeploymentPage do
         </.alert>
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2 bg-white shadow-md rounded-lg p-4 max-h-screen">
-            <h2 class="text-xl pb-2">Backend recent deployment logs</h2>
+            <h2 class="text-xl pb-2"><%= @title %></h2>
             <div class="overflow-auto h-4/5">
               <ul>
                 <%= for log <- Enum.reverse(@agent_state.logs) do %>

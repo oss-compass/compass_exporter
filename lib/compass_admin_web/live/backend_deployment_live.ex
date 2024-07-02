@@ -17,6 +17,7 @@ defmodule CompassAdminWeb.BackendDeploymentLive do
 
     {:ok,
      assign(socket,
+       title: "Backend recent deployment logs",
        agent_state: state,
        can_deploy: can_deploy,
        current_user: current_user,
@@ -73,6 +74,7 @@ defmodule CompassAdminWeb.BackendDeploymentLive do
   def render(assigns) do
     ~H"""
     <.deployment_page
+      title={@title}
       agent_state={@agent_state}
       last_trigger={@last_trigger}
       last_deployer={@last_deployer}
