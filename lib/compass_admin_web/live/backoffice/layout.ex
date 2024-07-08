@@ -59,6 +59,20 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
         icon: docker_icon()
       },
       %{
+        label: "Configurations",
+        icon: setting_icon(),
+        expanded: true,
+        links:
+          Application.get_env(:compass_admin, :configurations, [])
+          |> Enum.map(fn {key, _path} ->
+            %{
+              icon: edit_file_icon(),
+              label: to_string(key) |> String.capitalize() |> String.replace("_", " "),
+              link: "/admin/configurations/#{key}"
+            }
+          end)
+      },
+      %{
         label: "Deployments",
         icon: rocket_icon(),
         expanded: true,

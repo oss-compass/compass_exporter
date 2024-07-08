@@ -22,6 +22,12 @@ defmodule CompassAdminWeb.Router do
     live "/", PageLive, :index
     live "/users", UserLive
     live "/dockers", DockerServicesLive, :index
+    live "/configurations", ConfigurationLive, :index
+
+    for {key, _path} <- Application.get_env(:compass_admin, :configurations, []) do
+      live "/configurations/#{key}", ConfigurationLive, key
+    end
+
     live "/deployments/backend", BackendDeploymentLive, :index
     live "/deployments/frontend", FrontendDeploymentLive, :index
 

@@ -34,6 +34,13 @@ config :compass_admin, :hostnames,
   app2: "app-front-2",
   apm: "compass-apm"
 
+config :compass_admin, :configurations, %{
+  nginx_config: "/path/to/nginx/nginx.conf",
+  nginx_server_config: "/path/to/nginx/server.conf",
+  rails_compass_com_config: "/path/to/app-front.env.local",
+  rails_compass_org_config: "/path/to/app-front.org.env.local"
+}
+
 config :compass_admin, CompassAdmin.Agents.FrontendAgent,
   input: [""],
   execute: "pyinfra prod-nodes.py prod-frontend-deploy.py"
@@ -41,6 +48,9 @@ config :compass_admin, CompassAdmin.Agents.FrontendAgent,
 config :compass_admin, CompassAdmin.Agents.BackendAgent,
   input: [""],
   execute: "pyinfra prod-nodes.py prod-backend-deploy.py"
+config :compass_admin, CompassAdminWeb.ConfigurationLive,
+  execute:
+    "cd {config_dir} && git config user.name {username} && git config user.email {useremail} && git add {config_path} && git commit -m '{commit_message}' && git push"
 
 config :compass_admin, CompassAdmin.Services.Docker,
   input: [""],

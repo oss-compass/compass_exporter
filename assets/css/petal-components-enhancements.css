@@ -45,6 +45,11 @@ input[type="radio"].has-error:not(.phx-no-feedback) {
   animation: 0.2s ease-out 0s normal forwards 1 fade-in-keys;
 }
 
+.cm-editor {
+   height: 90vh;
+   min-height: 88vh;
+}
+
 @keyframes fade-in-scale-keys{
   0% { scale: 0.95; opacity: 0; }
   100% { scale: 1.0; opacity: 1; }

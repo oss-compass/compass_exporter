@@ -4,6 +4,8 @@ defmodule CompassAdminWeb.BackendDeploymentLive do
   alias CompassAdmin.User
   alias CompassAdmin.Agents.BackendAgent
 
+  import CompassAdmin.Utils, only: [apm_call: 3]
+
   @impl true
   def mount(_params, %{"current_user" => current_user}, socket) do
     if connected?(socket), do: Process.send_after(self(), :refresh, 5000)
@@ -82,18 +84,5 @@ defmodule CompassAdminWeb.BackendDeploymentLive do
     >
     </.deployment_page>
     """
-  end
-
-  defp apm_call(module, func, args) do
-    :rpc.call(apm_node(), module, func, args)
-  end
-
-  defp apm_node() do
-    [node() | Node.list()]
-    |> Enum.filter(fn node ->
-      node_name = to_string(node)
-      String.contains?(node_name, "apm")
-    end)
-    |> List.first()
   end
 end
