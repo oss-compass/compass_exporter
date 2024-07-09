@@ -1,6 +1,7 @@
 defmodule CompassAdminWeb.ConfigurationLive do
   use CompassAdminWeb, :live_view
 
+  alias CompassAdmin.Agents.ExecAgent
   import CompassAdmin.Utils, only: [apm_call: 3]
 
   @max_lines 5000
@@ -48,16 +49,22 @@ defmodule CompassAdminWeb.ConfigurationLive do
 
     diff_command = "cd #{config_dir} && git diff #{ori_content_hash_obj} #{new_content_hash_obj}"
 
-    result = apm_call(Exile, :stream!, [["bash", "-l", "-c", diff_command]]) |> Enum.into("")
+    case apm_call(ExecAgent, :shell_exec, [diff_command]) do
+      {:ok, result} ->
+        {:noreply,
+         socket
+         |> assign(:staged, true)
+         |> assign(:staged_content, content)
+         |> assign(:content, result)
+         |> append_log("staged new changes")
+         |> push_event("update-editor", %{content: result})
+         |> push_event("set-read-only", %{value: true})}
 
-    {:noreply,
-     socket
-     |> assign(:staged, true)
-     |> assign(:staged_content, content)
-     |> assign(:content, result)
-     |> append_log("staged new changes")
-     |> push_event("update-editor", %{content: result})
-     |> push_event("set-read-only", %{value: true})}
+      {:error, exit_status, message} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Exit with #{exit_status}, reason: #{message}.")}
+    end
   end
 
   @impl true
@@ -113,16 +120,21 @@ defmodule CompassAdminWeb.ConfigurationLive do
       |> String.replace("{username}", current_user.name)
       |> String.replace("{useremail}", current_user.email)
       |> String.replace("{commit_message}", commit_message)
-      |> IO.inspect(label: "commit")
 
-    result = apm_call(Exile, :stream!, [["bash", "-l", "-c", final_execute]]) |> Enum.into("")
+    case apm_call(ExecAgent, :shell_exec, [final_execute]) do
+      {:ok, result} ->
+        {:noreply,
+         socket
+         |> append_log("committed new changes")
+         |> append_log(result)
+         |> put_flash(:info, "Updated Successfully.")
+         |> redirect(to: current_path)}
 
-    {:noreply,
-     socket
-     |> append_log("committed new changes")
-     |> append_log(result)
-     |> put_flash(:info, "Updated Successfully.")
-     |> redirect(to: current_path)}
+      {:error, exit_status, message} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Exit with #{exit_status}, reason: #{message}.")}
+    end
   end
 
   @impl true

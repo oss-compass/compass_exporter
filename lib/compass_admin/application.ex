@@ -56,6 +56,8 @@ defmodule CompassAdmin.Application do
       # {CompassAdmin.Worker, arg}
       CompassAdmin.Scheduler,
       {Highlander, CompassAdmin.GlobalScheduler},
+      # Exec agent
+      {CompassAdmin.Agents.ExecAgent, []},
       # Deployment agents
       {CompassAdmin.Agents.BackendAgent, []},
       {CompassAdmin.Agents.FrontendAgent, []}

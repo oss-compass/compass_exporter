@@ -98,6 +98,11 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
         label: "User",
         link: "/admin/users",
         icon: user_icon()
+      },
+      %{
+        label: "Gitee",
+        link: "/admin/gitee",
+        icon: gitee_icon()
       }
     ]
   end

@@ -50,6 +50,7 @@ defmodule CompassAdmin.MixProject do
       {:timex, "~> 3.7"},
       {:libcluster, "~> 3.3"},
       {:xmlrpc, "~> 1.4"},
+      {:flatten_map, "~> 0.1.0"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.0"},
@@ -72,6 +73,7 @@ defmodule CompassAdmin.MixProject do
       {:sitemapper, "~> 0.6"},
       {:plug_cowboy, "~> 2.5"},
       {:petal_components, "~> 0.18.0"},
+      {:ex_indexea, "~> 0.1.0"},
       {:backoffice, path: "backoffice"},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:decimal, "~> 2.0", override: true}

@@ -2,7 +2,7 @@ defmodule CompassAdmin.Agents.FrontendAgent do
   use GenServer
 
   alias CompassAdmin.User
-  alias CompassAdmin.Agents.BaseAgent
+  alias CompassAdmin.Agents.DeployAgent
 
   @agent_svn "frontend_v1"
 
@@ -11,7 +11,7 @@ defmodule CompassAdmin.Agents.FrontendAgent do
   end
 
   def init(_) do
-    {:ok, BaseAgent.init(@agent_svn)}
+    {:ok, DeployAgent.init(@agent_svn)}
   end
 
   def execute(trigger_id) do
@@ -39,7 +39,7 @@ defmodule CompassAdmin.Agents.FrontendAgent do
 
   def handle_cast({:update_deploy_state, deploy_state, last_deploy_id, last_deploy_result}, state) do
     {:noreply,
-     BaseAgent.update_deploy_state(
+     DeployAgent.update_deploy_state(
        state,
        deploy_state,
        last_deploy_id,
@@ -48,11 +48,11 @@ defmodule CompassAdmin.Agents.FrontendAgent do
   end
 
   def handle_cast({:append, log}, state) do
-    {:noreply, BaseAgent.append_log(state, log)}
+    {:noreply, DeployAgent.append_log(state, log)}
   end
 
   def handle_cast({:deploy, trigger_id}, state) do
-    {:noreply, BaseAgent.deploy(__MODULE__, state, trigger_id, User.frontend_dev_role())}
+    {:noreply, DeployAgent.deploy(__MODULE__, state, trigger_id, User.frontend_dev_role())}
   end
 
   def handle_info(_msg, state) do

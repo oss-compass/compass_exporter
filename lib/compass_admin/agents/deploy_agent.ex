@@ -1,4 +1,4 @@
-defmodule CompassAdmin.Agents.BaseAgent do
+defmodule CompassAdmin.Agents.DeployAgent do
   @max_lines 5000
 
   import Ecto.Query

@@ -28,6 +28,9 @@ defmodule CompassAdminWeb.Router do
       live "/configurations/#{key}", ConfigurationLive, key
     end
 
+    live "/gitee", GiteeLive, :index
+    live "/gitee/bulk", GiteeLive, :bulk
+
     live "/deployments/backend", BackendDeploymentLive, :index
     live "/deployments/frontend", FrontendDeploymentLive, :index
 

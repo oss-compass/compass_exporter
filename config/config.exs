@@ -34,6 +34,17 @@ config :compass_admin, :hostnames,
   app2: "app-front-2",
   apm: "compass-apm"
 
+config ExIndexea.Config,
+  app: "<app-code>",
+  access_token: "<access_token>"
+
+config :ex_indexea,
+  repo_index: 1027,
+  issue_index: 1028,
+  creator_id: 1072,
+  owner_id: 1066,
+  open_search_id: 1074
+
 config :compass_admin, :configurations, %{
   nginx_config: "/path/to/nginx/nginx.conf",
   nginx_server_config: "/path/to/nginx/server.conf",
