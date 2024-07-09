@@ -1,6 +1,7 @@
 defmodule CompassAdminWeb.ConfigurationLive do
   use CompassAdminWeb, :live_view
 
+  alias CompassAdmin.User
   alias CompassAdmin.Agents.ExecAgent
   import CompassAdmin.Utils, only: [apm_call: 3]
 
@@ -8,13 +9,17 @@ defmodule CompassAdminWeb.ConfigurationLive do
 
   @impl true
   def mount(_params, %{"current_user" => current_user}, socket) do
-    {:ok,
-     socket
-     |> assign(:logs, ["Welcome to use OSS Compass Admin Configurations.\n"])
-     |> assign(:staged, false)
-     |> assign(:commit_message, "")
-     |> assign(:current_user, current_user)
-     |> assign(:changeset, to_form(%{}))}
+    if current_user.role_level >= User.backend_dev_role() do
+      {:ok,
+       socket
+       |> assign(:logs, ["Welcome to use OSS Compass Admin Configurations.\n"])
+       |> assign(:staged, false)
+       |> assign(:commit_message, "")
+       |> assign(:current_user, current_user)
+       |> assign(:changeset, to_form(%{}))}
+    else
+      {:ok, put_flash(socket, :error, "You don't have permissions to access this page.")}
+    end
   end
 
   @impl true
