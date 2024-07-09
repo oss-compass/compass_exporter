@@ -13,12 +13,16 @@ defmodule CompassAdminWeb.ConfigurationLive do
       {:ok,
        socket
        |> assign(:logs, ["Welcome to use OSS Compass Admin Configurations.\n"])
+       |> assign(:hidden, false)
        |> assign(:staged, false)
        |> assign(:commit_message, "")
        |> assign(:current_user, current_user)
        |> assign(:changeset, to_form(%{}))}
     else
-      {:ok, put_flash(socket, :error, "You don't have permissions to access this page.")}
+      {:ok,
+       socket
+       |> assign(:hidden, true)
+       |> put_flash(:error, "You don't have permissions to access this page.")}
     end
   end
 
@@ -145,67 +149,69 @@ defmodule CompassAdminWeb.ConfigurationLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.container max_width="full">
-      <.h2><%= @title %></.h2>
-      <div class="grid grid-cols-3 gap-4">
-        <div class="overflow-y h-2/3 col-span-2" id="editor" phx-update="ignore"></div>
+    <%= if !@hidden do %>
+      <.container max_width="full">
+        <.h2><%= @title %></.h2>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="overflow-y h-2/3 col-span-2" id="editor" phx-update="ignore"></div>
 
-        <.form :let={f} for={@changeset} phx-submit="stage" phx-change="validate">
-          <.textarea
-            id="editdata"
-            form={f}
-            field={:content}
-            value={@content}
-            phx-hook="EditorFormHook"
-            class="hidden"
-          />
+          <.form :let={f} for={@changeset} phx-submit="stage" phx-change="validate">
+            <.textarea
+              id="editdata"
+              form={f}
+              field={:content}
+              value={@content}
+              phx-hook="EditorFormHook"
+              class="hidden"
+            />
 
-          <.form_field_error form={f} field={:content} class="mt-1" />
-          <div class="grid grid-cols-subgrid gap-4 col-span-1 grid-rows-2 max-h-fit">
-            <div class="grid grid-cols-1 gap-4 h-16">
-              <%= if !@staged do %>
-                <.button
-                  type="button"
-                  color="white"
-                  label="Reset"
-                  phx-click="reset"
-                  disabled={@content == @original_content}
-                />
-                <.button color="primary" label="Stage" disabled={@content == @original_content} />
-              <% end %>
-              <%= if @staged do %>
-                <.form_field
-                  type="textarea"
-                  form={f}
-                  field={:commit_message}
-                  placeholder="Commit Message"
-                />
-                <.button type="button" color="white" label="Revert" phx-click="revert" />
-                <.button
-                  type="button"
-                  color="primary"
-                  label="Commit"
-                  phx-click="commit"
-                  phx-disable-with="Committing..."
-                  disabled={@commit_message == ""}
-                />
-              <% end %>
-            </div>
-            <div class="grid grid-cols-1 gap-4">
-              <hr />
-              <.h4>Recent Logs</.h4>
-              <div class="grid grid-cols-1 gap-4 overflow-auto h-80">
-                <ul>
-                  <%= for log <- Enum.reverse(@logs) do %>
-                    <li class="text-nowrap text-gray-400 text-xs pb-1 pt-1"><%= log %></li>
-                  <% end %>
-                </ul>
+            <.form_field_error form={f} field={:content} class="mt-1" />
+            <div class="grid grid-cols-subgrid gap-4 col-span-1 grid-rows-2 max-h-fit">
+              <div class="grid grid-cols-1 gap-4 h-16">
+                <%= if !@staged do %>
+                  <.button
+                    type="button"
+                    color="white"
+                    label="Reset"
+                    phx-click="reset"
+                    disabled={@content == @original_content}
+                  />
+                  <.button color="primary" label="Stage" disabled={@content == @original_content} />
+                <% end %>
+                <%= if @staged do %>
+                  <.form_field
+                    type="textarea"
+                    form={f}
+                    field={:commit_message}
+                    placeholder="Commit Message"
+                  />
+                  <.button type="button" color="white" label="Revert" phx-click="revert" />
+                  <.button
+                    type="button"
+                    color="primary"
+                    label="Commit"
+                    phx-click="commit"
+                    phx-disable-with="Committing..."
+                    disabled={@commit_message == ""}
+                  />
+                <% end %>
+              </div>
+              <div class="grid grid-cols-1 gap-4">
+                <hr />
+                <.h4>Recent Logs</.h4>
+                <div class="grid grid-cols-1 gap-4 overflow-auto h-80">
+                  <ul>
+                    <%= for log <- Enum.reverse(@logs) do %>
+                      <li class="text-nowrap text-gray-400 text-xs pb-1 pt-1"><%= log %></li>
+                    <% end %>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </.form>
-      </div>
-    </.container>
+          </.form>
+        </div>
+      </.container>
+    <% end %>
     """
   end
 
