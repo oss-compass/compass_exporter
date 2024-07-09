@@ -45,7 +45,9 @@ defmodule CompassAdmin.User do
     |> validate_required([:name])
   end
 
-  def normal_role, do: 1
+  def normal_role, do: 3
+
+  def community_role, do: 4
 
   def frontend_dev_role, do: 5
 
