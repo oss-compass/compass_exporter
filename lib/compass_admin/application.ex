@@ -39,7 +39,7 @@ defmodule CompassAdmin.Application do
       # Start the Endpoint (http/https)
       CompassAdminWeb.Endpoint,
       # Start Redix
-      {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix]}},
+      {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix, backoff_max: 2_000, timeout: 2_000], }},
       {Redlock,
        [
          pool_size: 2,
