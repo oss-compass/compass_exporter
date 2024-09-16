@@ -70,7 +70,11 @@ config :compass_admin, CompassAdminWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   server: true,
-  http: [ip: {0, 0, 0, 0}, port: 4000],
+  http: [
+    ip: {0, 0, 0, 0},
+    port: 4000,
+    protocol_options: [idle_timeout: 3_600_000]
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

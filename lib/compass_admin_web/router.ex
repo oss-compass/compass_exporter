@@ -17,6 +17,11 @@ defmodule CompassAdminWeb.Router do
     plug :accepts, ["json"]
   end
 
+  scope "/", CompassAdminWeb do
+    pipe_through :api
+    match :*, "/v2/*path", DebugController, :docker_registry_proxy
+  end
+
   scope "/admin", CompassAdminWeb do
     pipe_through :browser
     live "/", PageLive, :index

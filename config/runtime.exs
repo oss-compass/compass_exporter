@@ -59,7 +59,7 @@ if config_env() == :prod do
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port,
-      protocol_options: [max_header_value_length: 10240]
+      protocol_options: [max_header_value_length: 10240, idle_timeout: 1_800_000]
     ],
     secret_key_base: secret_key_base
 

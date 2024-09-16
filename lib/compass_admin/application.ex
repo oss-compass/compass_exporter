@@ -36,6 +36,7 @@ defmodule CompassAdmin.Application do
       CompassAdminWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: CompassAdmin.PubSub},
+      CompassAdmin.DockerTokenCacher,
       # Start the Endpoint (http/https)
       CompassAdminWeb.Endpoint,
       # Start Redix
