@@ -10,6 +10,7 @@ defmodule CompassAdmin.Application do
     topologies = Application.get_env(:libcluster, :topologies)
     redis_url = Application.get_env(:compass_admin, :redis_url, "")
     %{host: redis_host, port: redis_port, userinfo: userinfo, path: path} = URI.parse(redis_url)
+    [riak_host, riak_port] = Application.get_env(:compass_admin, :riak, ['127.0.0.1', 8087])
 
     auth =
       case userinfo do
@@ -39,6 +40,8 @@ defmodule CompassAdmin.Application do
       CompassAdmin.DockerTokenCacher,
       # Start the Endpoint (http/https)
       CompassAdminWeb.Endpoint,
+      # Start Riak
+      :poolboy.child_spec(:riak_pool, riak_config(), [riak_host, riak_port]),
       # Start Redix
       {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix, backoff_max: 2_000, timeout: 2_000], }},
       {Redlock,
@@ -86,5 +89,14 @@ defmodule CompassAdmin.Application do
   def config_change(changed, _new, removed) do
     CompassAdminWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp riak_config() do
+    [
+      name: {:local, CompassAdmin.RiakPool},
+      worker_module: CompassAdmin.RiakPool,
+      size: 5,
+      max_overflow: 0
+    ]
   end
 end

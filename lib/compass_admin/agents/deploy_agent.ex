@@ -1,9 +1,11 @@
 defmodule CompassAdmin.Agents.DeployAgent do
   @max_lines 5000
+  @bucket "deploy_states"
 
   import Ecto.Query
   alias CompassAdmin.Repo
   alias CompassAdmin.User
+  alias CompassAdmin.RiakPool
 
   def init(cache_key) do
     restore(cache_key)
@@ -101,8 +103,8 @@ defmodule CompassAdmin.Agents.DeployAgent do
   end
 
   defp restore(cache_key) do
-    with {:ok, cached} <- Redix.command(:redix, ["GET", "compass:admin:#{cache_key}"]) do
-      if cached != nil, do: :erlang.binary_to_term(cached), else: nil
+    with cached <- Riak.find(RiakPool.conn, @bucket, "compass:admin:#{cache_key}") do
+      if(cached, do: :erlang.binary_to_term(cached.data), else: nil)
     end ||
       %{
         state: :ok,
@@ -119,7 +121,15 @@ defmodule CompassAdmin.Agents.DeployAgent do
       }
   end
 
+
+
   defp save(cache_key, state) do
-    Redix.command(:redix, ["SET", "compass:admin:#{cache_key}", :erlang.term_to_binary(state)])
+    cached =
+      Riak.Object.create(
+        bucket: @bucket,
+        key: "compass:admin:#{cache_key}",
+        data: :erlang.term_to_binary(state)
+      )
+    Riak.put(RiakPool.conn, cached)
   end
 end

@@ -23,6 +23,8 @@ config :compass_admin, CompassAdmin.Cluster,
 config :compass_admin, :redis_url,
   "redis://10.7.0.3:6379/1"
 
+config :compass_admin, :riak, ['127.0.0.1', 8087]
+
 config :amqp,
   connections: [
     compass_conn: [url: "amqp://admin:admin@localhost:5672"],
