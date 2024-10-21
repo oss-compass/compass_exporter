@@ -219,7 +219,7 @@ defmodule CompassAdminWeb.ConfigurationLive do
 
   defp recent_logs(config) do
     with cached <- Riak.find(RiakPool.conn, @bucket, "compass:admin:#{config}:logs") do
-      if cached != nil, do: :erlang.binary_to_term(cached), else: []
+      if cached != nil, do: :erlang.binary_to_term(cached.data), else: []
     end || []
   end
 
