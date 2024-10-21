@@ -42,8 +42,6 @@ defmodule CompassAdmin.Application do
       CompassAdminWeb.Endpoint,
       # Start Riak
       :poolboy.child_spec(:riak_pool, riak_config(), [riak_host, riak_port]),
-      # Start Redix
-      {Redix, {System.get_env("REDIS_URL") || redis_url, [name: :redix, backoff_max: 2_000, timeout: 2_000], }},
       {Redlock,
        [
          pool_size: 2,
