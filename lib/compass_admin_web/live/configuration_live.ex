@@ -2,10 +2,12 @@ defmodule CompassAdminWeb.ConfigurationLive do
   use CompassAdminWeb, :live_view
 
   alias CompassAdmin.User
+  alias CompassAdmin.RiakPool
   alias CompassAdmin.Agents.ExecAgent
   import CompassAdmin.Utils, only: [apm_call: 3]
 
   @max_lines 5000
+  @bucket "configures"
 
   @impl true
   def mount(_params, %{"current_user" => current_user}, socket) do
@@ -216,13 +218,19 @@ defmodule CompassAdminWeb.ConfigurationLive do
   end
 
   defp recent_logs(config) do
-    with {:ok, cached} <- Redix.command(:redix, ["GET", "compass:admin:#{config}:logs"]) do
+    with cached <- Riak.find(RiakPool.conn, @bucket, "compass:admin:#{config}:logs") do
       if cached != nil, do: :erlang.binary_to_term(cached), else: []
     end || []
   end
 
   defp save_logs(config, logs) do
-    Redix.command(:redix, ["SET", "compass:admin:#{config}:logs", :erlang.term_to_binary(logs)])
+    cached =
+      Riak.Object.create(
+        bucket: @bucket,
+        key: "compass:admin:#{config}:logs",
+        data: :erlang.term_to_binary(logs)
+      )
+    Riak.put(RiakPool.conn, cached)
   end
 
   defp append_log(socket, log) do
