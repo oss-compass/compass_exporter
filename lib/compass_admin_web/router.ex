@@ -33,8 +33,11 @@ defmodule CompassAdminWeb.Router do
       live "/configurations/#{key}", ConfigurationLive, key
     end
 
-    live "/gitee", GiteeLive, :index
-    live "/gitee/bulk", GiteeLive, :bulk
+    live "/gitee/repos", GiteeReposLive, :index
+    live "/gitee/repos/bulk", GiteeReposLive, :bulk
+
+    live "/gitee/issues", GiteeIssuesLive, :index
+    live "/gitee/issues/bulk", GiteeIssuesLive, :bulk
 
     live "/deployments/backend", BackendDeploymentLive, :index
     live "/deployments/frontend", FrontendDeploymentLive, :index

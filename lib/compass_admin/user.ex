@@ -58,4 +58,6 @@ defmodule CompassAdmin.User do
   def super_role, do: 10
 
   def admin_role, do: 65535
+
+  def is_admin?(user), do: user.role_level >= admin_role()
 end

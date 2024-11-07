@@ -1,4 +1,4 @@
-defmodule CompassAdminWeb.GiteeLive do
+defmodule CompassAdminWeb.GiteeIssuesLive do
   use CompassAdminWeb, :live_view
 
   alias CompassAdmin.User
@@ -14,7 +14,7 @@ defmodule CompassAdminWeb.GiteeLive do
 
   @impl true
   def mount(_params, %{"current_user" => current_user}, socket) do
-    if current_user.role_level >= User.admin_role() do
+    if User.is_admin?(current_user) do
       {
         :ok,
         socket
@@ -61,10 +61,6 @@ defmodule CompassAdminWeb.GiteeLive do
     {:noreply, push_patch(socket, to: cached_url(socket, query, @default_page))}
   end
 
-  def handle_event("validate", %{"bulk_field" => %{"creator_id" => creator_id}}, socket) do
-    {:noreply, assign(socket, :can_delete_by_creator_id, is_number_string(creator_id))}
-  end
-
   def handle_event("validate", %{"bulk_field" => %{"owner_id" => owner_id}}, socket) do
     {:noreply, assign(socket, :can_delete_by_owner_id, is_number_string(owner_id))}
   end
@@ -102,7 +98,7 @@ defmodule CompassAdminWeb.GiteeLive do
   def handle_event("bulk", %{"bulk_field" => %{"owner_id" => owner_id}}, socket) do
     {:noreply,
      if(is_number_string(owner_id),
-       do: bulk_delete(socket, :creator_id, %{owner_id: String.to_integer(owner_id)}),
+       do: bulk_delete(socket, :issue_owner_id, %{owner_id: String.to_integer(owner_id)}),
        else: socket
      )}
   end
@@ -159,7 +155,7 @@ defmodule CompassAdminWeb.GiteeLive do
 
             <.button
               link_type="live_patch"
-              to={"/admin/gitee/bulk?page=#{@meta[:current_page]}&query=#{@meta[:query]}&search_mode=#{@search_mode}"}
+              to={"/admin/gitee/issues/bulk?page=#{@meta[:current_page]}&query=#{@meta[:query]}&search_mode=#{@search_mode}"}
               label="Bulk"
             />
           </span>
@@ -172,16 +168,6 @@ defmodule CompassAdminWeb.GiteeLive do
         />
         <%= if @live_action == :bulk do %>
           <.modal max_width="lg" title="Bulk Operations">
-            <form phx-submit="bulk" phx-change="validate" class="mb-2 float-left">
-              <.p>Delete by creator_id :</.p>
-              <%= text_input(:bulk_field, :creator_id,
-                placeholder: "input the creator_id",
-                autofocus: true,
-                "phx-debounce": "300"
-              ) %>
-              <.button label="Confirm" disabled={!@can_delete_by_creator_id} />
-            </form>
-
             <form phx-submit="bulk" phx-change="validate" class="mb-2 float-left">
               <.p>Delete by owner_id :</.p>
               <%= text_input(:bulk_field, :owner_id,
@@ -258,7 +244,7 @@ defmodule CompassAdminWeb.GiteeLive do
           link_type="live_patch"
           path={
             fn page ->
-              "/admin/gitee?page=#{page}&query=#{@meta[:query]}&search_mode=#{@search_mode}"
+              "/admin/gitee/issues?page=#{page}&query=#{@meta[:query]}&search_mode=#{@search_mode}"
             end
           }
           current_page={@meta[:current_page]}
@@ -320,21 +306,21 @@ defmodule CompassAdminWeb.GiteeLive do
   end
 
   defp do_list_recods("open_search", params) do
-    ExIndexea.Queries.search_query(client(), Config.app(), config(:open_search_id), params)
+    ExIndexea.Queries.search_query(client(), Config.app(), config(:issue_search_id), params)
   end
 
   defp do_list_recods(_, params) do
-    ExIndexea.Records.list(client(), Config.app(), config(:repo_index), params)
+    ExIndexea.Records.list(client(), Config.app(), config(:issue_index), params)
   end
 
   defp bulk_delete(socket, key, params) do
     case ExIndexea.Records.delete_by_query(
-           client(),
-           Config.app(),
-           config(:repo_index),
-           config(key),
-           params
-         ) do
+          client(),
+          Config.app(),
+          config(:issue_index),
+          config(key),
+          params
+        ) do
       {200, _data, _resp} ->
         socket
         |> put_flash(:info, "Deleted Successfully.")
@@ -385,7 +371,7 @@ defmodule CompassAdminWeb.GiteeLive do
     cached_page = page || socket.assigns[:meta][:current_page] || @default_page
     search_mode = search_mode || socket.assigns[:search_mode] || @default_search_mode
 
-    "/admin/gitee/#{suffix}?page=#{cached_page}&query=#{query}&search_mode=#{search_mode}"
+    "/admin/gitee/issues/#{suffix}?page=#{cached_page}&query=#{query}&search_mode=#{search_mode}"
   end
 
   defp client() do

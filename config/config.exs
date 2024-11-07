@@ -40,10 +40,12 @@ config ExIndexea.Config,
 
 config :ex_indexea,
   repo_index: 1027,
-  issue_index: 1028,
+  issue_index: 1115,
   creator_id: 1072,
   owner_id: 1066,
-  open_search_id: 1074
+  issue_owner_id: 1067,
+  open_search_id: 1074,
+  issue_search_id: 1154
 
 config :compass_admin, :configurations, %{
   nginx_config: "/path/to/nginx/nginx.conf",
@@ -59,6 +61,7 @@ config :compass_admin, CompassAdmin.Agents.FrontendAgent,
 config :compass_admin, CompassAdmin.Agents.BackendAgent,
   input: [""],
   execute: "pyinfra prod-nodes.py prod-backend-deploy.py"
+
 config :compass_admin, CompassAdminWeb.ConfigurationLive,
   execute:
     "cd {config_dir} && git config user.name {username} && git config user.email {useremail} && git add {config_path} && git commit -m '{commit_message}' && git push"

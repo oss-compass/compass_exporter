@@ -101,9 +101,19 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
       },
       %{
         label: "Gitee",
-        link: "/admin/gitee",
-        icon: gitee_icon()
-      }
+        icon: gitee_icon(),
+        expanded: true,
+        links: [
+          %{
+            label: "Repositories",
+            link: "/admin/gitee/repos"
+          },
+          %{
+            label: "Issues",
+            link: "/admin/gitee/issues"
+          }
+        ]
+      },
     ]
   end
 end
