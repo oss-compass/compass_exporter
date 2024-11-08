@@ -1,5 +1,6 @@
 defmodule CompassAdminWeb.DebugController do
   alias Plug.Conn
+  alias ReverseProxyPlug.HTTPClient
   alias CompassAdmin.DockerTokenCacher
   alias CompassAdmin.DockerTokenCacher.Token
 
@@ -23,11 +24,22 @@ defmodule CompassAdminWeb.DebugController do
   end
 
   def docker_registry_proxy(conn, _params) do
+
+    upstream = "https://registry-1.docker.io"
+
     params =
       ReverseProxyPlug.init(
-        upstream: "https://registry-1.docker.io",
+        upstream: upstream,
         client_options: @client_options,
         response_mode: :buffer,
+        preserve_host_header: false
+      )
+
+    stream_params =
+      ReverseProxyPlug.init(
+        upstream: upstream,
+        client_options: @client_options,
+        response_mode: :stream,
         preserve_host_header: false
       )
 
@@ -43,22 +55,46 @@ defmodule CompassAdminWeb.DebugController do
         auth_conn
         |> ReverseProxyPlug.request(body, params)
         |> handle_redirect(auth_conn)
-        |> ReverseProxyPlug.response(conn, params)
+        |> handle_redirect_resp()
+        |> ReverseProxyPlug.response(conn, if(Enum.member?(conn.path_info, "blobs"), do: stream_params, else: params))
       {:error, reason} ->
         json(conn, %{error: reason})
     end
   end
 
-  def handle_redirect({:ok, %{status_code: code, headers: headers, request: %{headers: req_headers}}}, conn)  when code > 300 and code < 400 do
+  def handle_redirect({:ok, %{status_code: code, headers: headers, request: %{headers: req_headers}}}, conn)
+  when code > 300 and code < 400 do
     next = get_location(headers)
-    method =
-      conn.method
-      |> String.downcase()
-      |> String.to_existing_atom()
-    apply(HTTPoison, method, [next, remove_host(req_headers), @client_options])
+    final_options = if Enum.member?(conn.path_info, "blobs"),
+      do: @client_options |> Keyword.put_new(:stream_to, self()),
+      else: @client_options
+  method =
+    conn.method
+    |> String.downcase()
+    |> String.to_existing_atom()
+  apply(HTTPoison, method, [next, remove_host(req_headers), final_options])
   end
 
   def handle_redirect(resp, _), do: resp
+
+  def handle_redirect_resp({:ok, %HTTPoison.AsyncResponse{} = resp}) do
+    {:ok, translate_response(resp)}
+  end
+
+  def handle_redirect_resp(resp), do: resp
+
+  defp translate_response(%mod{} = response) do
+    data = Map.from_struct(response)
+
+    translated_resp =
+      mod
+      |> translate_mod()
+      |> struct(data)
+
+    translated_resp
+  end
+
+  defp translate_mod(HTTPoison.AsyncResponse), do: HTTPClient.AsyncResponse
 
   defp get_location(headers) do
     {_h, location} =

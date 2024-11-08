@@ -73,7 +73,7 @@ defmodule CompassAdmin.MixProject do
       {:jason, "~> 1.2"},
       {:sitemapper, "~> 0.6"},
       {:plug_cowboy, "~> 2.5"},
-      {:reverse_proxy_plug, "~> 3.0"},
+      {:reverse_proxy_plug, "~> 2.4"},
       {:httpoison, "~> 2.2"},
       {:petal_components, "~> 0.18.0"},
       {:ex_indexea, "~> 0.1.0"},
