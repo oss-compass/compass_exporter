@@ -30,8 +30,9 @@ defmodule CompassAdminWeb.DebugController do
     params =
       ReverseProxyPlug.init(
         upstream: upstream,
+        client_options: [proxy: nil, timeout: 1_000, recv_timeout: 2_000],
         response_mode: :buffer,
-        preserve_host_header: true
+        preserve_host_header: false
       )
     {:ok, body, conn} = Plug.Conn.read_body(conn)
 
@@ -100,24 +101,29 @@ defmodule CompassAdminWeb.DebugController do
 
   def handle_redirect(resp, _), do: resp
 
-  def handle_redirect_resp({:ok, %HTTPoison.AsyncResponse{} = resp}) do
-    {:ok, translate_response(resp)}
+  def handle_redirect_resp({:ok, %HTTPoison.AsyncResponse{} = _resp}) do
+    {:ok,
+     Stream.unfold(nil, fn _ ->
+       receive do
+         %HTTPoison.AsyncStatus{code: code} ->
+           {{:status, code}, nil}
+
+           %HTTPoison.AsyncHeaders{headers: headers} ->
+           {{:headers, headers}, nil}
+
+         %HTTPoison.AsyncChunk{chunk: chunk} ->
+           {{:chunk, chunk}, nil}
+
+         %HTTPoison.Error{reason: reason} ->
+           {{:error, %HTTPClient.Error{reason: reason}}, nil}
+
+         %HTTPoison.AsyncEnd{} ->
+           nil
+       end
+     end)}
   end
 
   def handle_redirect_resp(resp), do: resp
-
-  defp translate_response(%mod{} = response) do
-    data = Map.from_struct(response)
-
-    translated_resp =
-      mod
-      |> translate_mod()
-      |> struct(data)
-
-    translated_resp
-  end
-
-  defp translate_mod(HTTPoison.AsyncResponse), do: HTTPClient.AsyncResponse
 
   defp get_location(headers) do
     {_h, location} =
