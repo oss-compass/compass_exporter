@@ -2,6 +2,7 @@ defmodule CompassAdmin.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
+  @default_log_command "parallel --tagstring \"{}|\" --line-buffer tail -F {} ::: log/*.log"
 
   use Application
 
@@ -32,6 +33,7 @@ defmodule CompassAdmin.Application do
       # Start the Elasticsearch cluster
       CompassAdmin.Cluster,
       # Start finch pool
+      {Finch, name: LogFinch},
       {Finch, name: CompassFinch},
       # Start the Telemetry supervisor
       CompassAdminWeb.Telemetry,
@@ -55,7 +57,7 @@ defmodule CompassAdmin.Application do
            [host: redis_host, port: redis_port, auth: auth, database: database]
          ]
        ]},
-      # {CompassAdmin.Worker, arg}
+      app_logger(),
       CompassAdmin.Scheduler,
       {Highlander, CompassAdmin.GlobalScheduler},
       # Exec agent
@@ -63,7 +65,7 @@ defmodule CompassAdmin.Application do
       # Deployment agents
       {CompassAdmin.Agents.BackendAgent, []},
       {CompassAdmin.Agents.FrontendAgent, []}
-    ]
+    ] |> Enum.reject(&is_nil/1)
 
     CompassAdmin.Plug.MetricsExporter.setup()
     Metrics.CompassInstrumenter.setup()
@@ -87,6 +89,16 @@ defmodule CompassAdmin.Application do
   def config_change(changed, _new, removed) do
     CompassAdminWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp app_logger() do
+    if String.contains?(to_string(node()), "app") ||
+      String.contains?(to_string(node()), "grimoirelab") do
+      {CompassAdmin.LogBoardway, [
+          Application.get_env(:compass_admin, :apm, %{log_command: @default_log_command})[:log_command]
+        ]
+      }
+    end
   end
 
   defp riak_config() do

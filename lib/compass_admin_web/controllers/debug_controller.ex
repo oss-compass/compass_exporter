@@ -9,6 +9,7 @@ defmodule CompassAdminWeb.DebugController do
   import CompassAdminWeb.Helpers
 
   @config Application.get_env(:compass_admin, CompassAdmin.Services.ExportMetrics, %{})
+  @apm_config Application.get_env(:compass_admin, :apm, %{})
   @client_options [proxy: @config[:proxy], timeout: 180_000, recv_timeout: 3_600_000]
 
   def webhook(conn, _params) do
@@ -22,6 +23,28 @@ defmodule CompassAdminWeb.DebugController do
       }
     )
   end
+
+  def apm_proxy(conn, _params) do
+    upstream = @apm_config[:upstream]
+
+    params =
+      ReverseProxyPlug.init(
+        upstream: upstream,
+        response_mode: :buffer,
+        preserve_host_header: true
+      )
+    {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+    auth_conn =
+      %Conn{}
+      |> Map.merge(conn)
+      |> Conn.put_req_header("Authorization", "Basic #{@apm_config[:basic_auth]}")
+
+    auth_conn
+    |> ReverseProxyPlug.request(body, params)
+    |> ReverseProxyPlug.response(conn, params)
+  end
+
 
   def docker_registry_proxy(conn, _params) do
 

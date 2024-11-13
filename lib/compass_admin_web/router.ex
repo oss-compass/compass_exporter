@@ -20,6 +20,7 @@ defmodule CompassAdminWeb.Router do
   scope "/", CompassAdminWeb do
     pipe_through :api
     match :*, "/v2/*path", DebugController, :docker_registry_proxy
+    match :*, "/api/*path", DebugController, :apm_proxy
   end
 
   scope "/admin", CompassAdminWeb do

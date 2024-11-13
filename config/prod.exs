@@ -48,6 +48,9 @@ config :compass_admin, CompassAdmin.Services.QueueSchedule,
 config :compass_admin, CompassAdmin.Services.CronoCheck,
   process_name: "compass-web-crontab",
   supervisor_api: "http://localhost:19999/RPC2",
+
+config :compass_admin, :apm,
+  upstream: "http://localhost:4318",
   basic_auth: "basic_auth"
 
 config :compass_admin, CompassAdmin.Services.ExportMetrics,
