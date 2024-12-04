@@ -23,7 +23,10 @@ erl_crash.dump
 compass_admin-*.tar
 
 # Ignore assets that are produced by build tools.
+/priv/static/robots-*
+/priv/static/favicon-*
 /priv/static/assets/
+/priv/static/images/*-*
 /priv/static/sitemaps/
 /priv/static/admin/assets/
 
@@ -37,3 +40,5 @@ npm-debug.log
 .vscode
 .elixir_ls
 
+.aider*
+.env
