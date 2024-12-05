@@ -63,6 +63,7 @@ defmodule CompassAdmin.Application do
       # Exec agent
       {CompassAdmin.Agents.ExecAgent, []},
       # Deployment agents
+      {CompassAdmin.Agents.GatewayAgent, []},
       {CompassAdmin.Agents.BackendAgent, []},
       {CompassAdmin.Agents.FrontendAgent, []}
     ] |> Enum.reject(&is_nil/1)

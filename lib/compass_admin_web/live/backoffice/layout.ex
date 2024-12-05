@@ -78,6 +78,11 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
         expanded: true,
         links: [
           %{
+            label: "Gateway Applications",
+            link: "/admin/deployments/gateway",
+            icon: nginx_icon()
+          },
+          %{
             label: "Frontend Applications",
             link: "/admin/deployments/frontend",
             icon: react_icon()

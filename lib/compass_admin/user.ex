@@ -55,6 +55,8 @@ defmodule CompassAdmin.User do
 
   def backend_dev_role, do: 7
 
+  def gateway_dev_role, do: 7
+
   def super_role, do: 10
 
   def admin_role, do: 65535

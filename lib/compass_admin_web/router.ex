@@ -40,6 +40,7 @@ defmodule CompassAdminWeb.Router do
     live "/gitee/issues", GiteeIssuesLive, :index
     live "/gitee/issues/bulk", GiteeIssuesLive, :bulk
 
+    live "/deployments/gateway", GatewayDeploymentLive, :index
     live "/deployments/backend", BackendDeploymentLive, :index
     live "/deployments/frontend", FrontendDeploymentLive, :index
 
