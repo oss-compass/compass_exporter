@@ -55,11 +55,11 @@ config :compass_admin, :configurations, %{
 }
 
 config :compass_admin, CompassAdmin.Agents.FrontendAgent,
-  input: [""],
+  input: ["\n"],
   execute: "pyinfra prod-nodes.py prod-frontend-deploy.py"
 
 config :compass_admin, CompassAdmin.Agents.BackendAgent,
-  input: [""],
+  input: ["\n"],
   execute: "pyinfra prod-nodes.py prod-backend-deploy.py"
 
 config :compass_admin, CompassAdmin.Agents.GatewayAgent,
