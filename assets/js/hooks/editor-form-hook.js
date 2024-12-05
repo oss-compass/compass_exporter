@@ -116,7 +116,7 @@ const EditorFormHook = {
       let new_state = view.state.update({
         changes: { from: 0, to: view.state.doc.length, insert: event.detail.content }
       });
-      view.dispatch(new_state)
+      view.dispatch(new_state);
     });
   }
 };

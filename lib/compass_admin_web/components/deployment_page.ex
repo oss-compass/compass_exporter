@@ -12,7 +12,7 @@ defmodule CompassAdminWeb.Components.DeploymentPage do
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2 bg-white shadow-md rounded-lg p-4 max-h-screen">
             <h2 class="text-xl pb-2"><%= @title %></h2>
-            <div class="overflow-auto h-4/5">
+            <div class="overflow-auto h-4/5" phx-hook="LogScrollHook" id="log-scroll-hook">
               <ul>
                 <%= for log <- Enum.reverse(@agent_state.logs) do %>
                   <li class="text-nowrap text-gray-400 pb-1 pt-1"><%= log %></li>
