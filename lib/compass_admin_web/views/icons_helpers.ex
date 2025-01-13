@@ -65,6 +65,19 @@ defmodule CompassAdminWeb.View.IconsHelpers do
     """
   end
 
+  def proxy_icon() do
+    """
+    <svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+        <g id="SVGRepo_iconCarrier">
+            <path d="M0 0h192v192H0z" style="fill:none"></path>
+            <path d="M78.65 58.81h58.33V34.14L170 67l-33.04 32.68V75.34H78.65V58.81zm33.93 65.43H54.42v24.86L22 116l32.49-32.33v23.97h58.09v16.6z" style="fill:none;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:12px"></path>
+        </g>
+    </svg>
+    """
+  end
+
   def ruby_icon() do
     """
     <svg xmlns="http://www.w3.org/2000/svg" aria-label="Ruby Gems" role="img" viewBox="0 0 512 512" fill="#000000">

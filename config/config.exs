@@ -66,6 +66,10 @@ config :compass_admin, CompassAdmin.Agents.GatewayAgent,
   input: ["\n"],
   execute: "pyinfra prod-nodes.py prod-nginx-deploy.py"
 
+config :compass_admin, CompassAdmin.Agents.ProxyAgent,
+  input: [""],
+  execute: "pyinfra prod-nodes.py prod-proxy-restart.py"
+
 config :compass_admin, CompassAdminWeb.ConfigurationLive,
   execute:
     "cd {config_dir} && git config user.name {username} && git config user.email {useremail} && git add {config_path} && git commit -m '{commit_message}' && git push"

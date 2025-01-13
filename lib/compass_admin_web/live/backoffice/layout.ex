@@ -91,6 +91,11 @@ defmodule CompassAdminWeb.Live.Backoffice.Layout do
             label: "Backend Applications",
             link: "/admin/deployments/backend",
             icon: ruby_icon()
+          },
+          %{
+            label: "Proxy Applications",
+            link: "/admin/deployments/proxy",
+            icon: proxy_icon()
           }
         ]
       },

@@ -65,7 +65,8 @@ defmodule CompassAdmin.Application do
       # Deployment agents
       {CompassAdmin.Agents.GatewayAgent, []},
       {CompassAdmin.Agents.BackendAgent, []},
-      {CompassAdmin.Agents.FrontendAgent, []}
+      {CompassAdmin.Agents.FrontendAgent, []},
+      {CompassAdmin.Agents.ProxyAgent, []},
     ] |> Enum.reject(&is_nil/1)
 
     CompassAdmin.Plug.MetricsExporter.setup()
